@@ -13,8 +13,9 @@
 #endif
 
 #include <WiFi.h>
+#include <PubSubClient.h>
 #include "global_objects.h"
-#include <LittleFS.h>
+#include "sensors/SensorFactory.h"
 
 const char *encryptionTypeToString(wifi_auth_mode_t encryptionType)
 {
@@ -92,6 +93,11 @@ void wifiSetup(){
 
 #ifndef PIO_UNIT_TESTING
 
+IPAddress serverIp(192,168,1,103);
+WiFiClient espWiFiClient;
+PubSubClient mqttClient(espWiFiClient);
+Sensor* moistureSensor;
+
 void setup() {
     Serial.begin(115200);
     // Wait after flashing/boot to allow terminal to connect
@@ -99,13 +105,59 @@ void setup() {
     // put your setup code here, to run once:
     ramLogger.logLn("MultiSensor-MQTT");
     wifiSetup();
+
+    // mqtt setup
+    mqttClient.setServer(serverIp, 1883);
+
+    // Sensor setup
+    moistureSensor = SensorFactory::createADCSensor(33);
+}
+
+void reconnect() {
+  // Loop until we're reconnected
+  while (!mqttClient.connected()) {
+    Serial.print("Attempting MQTT connection...");
+    // Attempt to connect
+    if (mqttClient.connect("arduinoClient")) {
+      Serial.println("connected");
+      // Once connected, publish an announcement...
+    //   mqttClient.publish("outTopic","hello world");
+      // ... and resubscribe
+    //   mqttClient.subscribe("inTopic");
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(mqttClient.state());
+      Serial.println(" try again in 5 seconds");
+      // Wait 5 seconds before retrying
+      delay(5000);
+    }
+  }
 }
 
 void loop() {
-    RUN_ONCE{
-        Serial.print("Loop task core id: ");
-        Serial.println(xPortGetCoreID());
+    static uint32_t delayCounter = 0;
+    if(!mqttClient.connected()){
+        reconnect();
     }
+    mqttClient.loop();
+    delay(1000);
+    if(delayCounter % 30 == 0){
+        delayCounter = 0;
+        // publish value
+        char buffer[8] = "\0";
+
+        
+        const uint32_t maxReading = 2832;
+        const uint32_t minReading = 926;
+
+        uint32_t val = moistureSensor->readSensor();
+        if(val > maxReading) val = maxReading;
+        if(val < minReading) val = minReading;
+        val = map(val, minReading, maxReading, 100, 0);
+        mqttClient.publish("MultiSensor-MQTT/moisture", itoa(val, buffer, 10));
+        Serial.println(val);
+    }
+    delayCounter++;
 }
 
 #endif // PIO_UNIT_TESTING

@@ -2,6 +2,13 @@
 #define GLOBAL_H
 #include "cfg.h"
 
+// For creating fixed width integer definitions
+#if defined(ARDUINO)
+#include <Arduino.h>
+#else
+#include <stdint.h>
+#endif
+
 // Calculates the size of an array
 #define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0]))
 
