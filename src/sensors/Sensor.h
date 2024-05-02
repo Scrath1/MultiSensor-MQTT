@@ -1,18 +1,21 @@
 #ifndef SENSOR_H
 #define SENSOR_H
-#include <functional>
+#include "../filters/NoFilter.h"
 
-#include "filterFunctions.h"
-
+/**
+ * @brief Abstract sensor base class. Deriving classes must implement the readSensorRaw
+ * function which is called by the public interface function readSensor
+ * 
+ */
 class Sensor {
    public:
     /**
      * @brief Construct a new Sensor object
      *
-     * @param filterFunc [IN] Function to apply to any value read from the sensor.
+     * @param filter [IN] Filter to apply to any value read from the sensor.
      *  Defaults to no filter
      */
-    Sensor(FilterFunction filterFunc = noFilter);
+    Sensor(Filter& filter = NoFilterInstance);
 
     /**
      * @brief Function to call for reading the sensor.
@@ -28,7 +31,7 @@ class Sensor {
     /**
      * @brief Filter function which is applied to any value read from the sensor
      */
-    FilterFunction m_filterFunc;
+    Filter& m_filter;
 
     /**
      * @brief Returns a raw reading of the given sensor without any filtering

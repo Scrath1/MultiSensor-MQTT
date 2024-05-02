@@ -1,6 +1,8 @@
 #ifndef SENSOR_FACTORY_H
 #define SENSOR_FACTORY_H
 
+#include "../filters/NoFilter.h"
+
 // Add new sensor implementations here
 #include "ADCSensor.h"
 
@@ -13,8 +15,8 @@ class SensorFactory{
      * @param filterFunc 
      * @return Sensor* 
      */
-    static Sensor* createADCSensor(uint32_t pin, FilterFunction filterFunc = noFilter){
-        return new ADCSensor(pin, filterFunc);
+    static Sensor* createADCSensor(uint32_t pin, Filter& filter = NoFilterInstance){
+        return new ADCSensor(pin, filter);
     }
 };
 
