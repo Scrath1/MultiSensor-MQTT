@@ -19,20 +19,20 @@ Filesystem <|-- DesktopFilesystem
 
 interface Transformer{
     # std::shared_ptr<Transformer> m_next
-    + uint32_t applyTransformations(uint32_t input)
-    # uint32_t transform(uint32_t input)
+    + float_t applyTransformations(float_t input)
+    # float_t transform(float_t input)
 }
 class SimpleMovingAverageFilter{
     - uint32_t m_bufferSize
-    - uint16_t* m_averageBuffer
+    - float_t* m_averageBuffer
     - uint32_t m_nextBufferPosition
     - bool m_bufferInitialized
     + SimpleMovingAverageFilter(uint32_t n, std::shared_ptr<Transformer> next)
 }
 Transformer <|-- SimpleMovingAverageFilter
 class Remapper{
-    - uint32_t m_inMin, m_inMax, m_outMin, m_outMax
-    + Remapper(uint32_t inMin, uint32_t inMax, uint32_t outMin, uint32_t outMax,
+    - float_t m_inMin, m_inMax, m_outMin, m_outMax
+    + Remapper(float_t inMin, float_t inMax, float_t outMin, float_t outMax,
              std::shared_ptr<Transformer> next = std::shared_ptr<Transformer>()
 }
 Transformer <|-- Remapper
@@ -40,7 +40,7 @@ Transformer <|-- Remapper
 abstract class Sensor{
     # std::shared_ptr<Transformer> m_transformer
     + Sensor(std::shared_ptr<Transformer> transformer)
-    + uint16_t readSensor()
+    + float_t readSensor()
     # readSensorRaw()
 }
 class ADCSensor{

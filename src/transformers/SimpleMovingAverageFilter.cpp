@@ -2,7 +2,7 @@
 
 SimpleMovingAverageFilter::SimpleMovingAverageFilter(uint32_t n, std::shared_ptr<Transformer> next)
 :Transformer(next), m_bufferSize(n){
-    m_averageBuffer = new uint16_t[n];
+    m_averageBuffer = new float_t[n];
     for(uint32_t i = 0; i < n; i++){
         m_averageBuffer[i] = 0;
     }
@@ -12,7 +12,7 @@ SimpleMovingAverageFilter::~SimpleMovingAverageFilter(){
     delete[] m_averageBuffer;
 }
 
-uint32_t SimpleMovingAverageFilter::transform(uint32_t input){
+float_t SimpleMovingAverageFilter::transform(float_t input){
     // On the first call to this objects filter function
     // the buffer is completely filled with the first given
     // value for a baseline average 

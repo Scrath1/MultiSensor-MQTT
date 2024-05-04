@@ -6,6 +6,7 @@
 #if defined(ARDUINO)
 #include <Arduino.h>
 #else
+#include <math.h>
 #include <stdint.h>
 #endif
 

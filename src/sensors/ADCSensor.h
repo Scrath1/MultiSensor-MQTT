@@ -13,7 +13,7 @@ class ADCSensor : public Sensor{
     ADCSensor(uint32_t pin, std::shared_ptr<Transformer> transformer = nullptr);
 
     protected:
-    uint16_t readSensorRaw();
+    float_t readSensorRaw();
 
     private:
     /**

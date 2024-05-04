@@ -23,9 +23,9 @@ class Sensor {
      * of the sensor object. Digital values are mapped to either 0 or UINT16_MAX while
      * analog values are not remapped
      * 
-     * @return uint16_t 
+     * @return SensorResult_t 
      */
-    uint16_t readSensor();
+    float_t readSensor();
 
    protected:
     /**
@@ -37,11 +37,12 @@ class Sensor {
 
     /**
      * @brief Returns a raw reading of the given sensor without any filtering
+     * or processing.
      * This function has to be implemented by derived classes for them to work
      * 
-     * @return uint16_t 
+     * @return float_t 
      */
-    virtual uint16_t readSensorRaw() = 0;
+    virtual float_t readSensorRaw() = 0;
 };
 
 #endif  // SENSOR_H

@@ -26,9 +26,9 @@ class SimpleMovingAverageFilter : public Transformer{
      * given input to provide a baseline for the average
      * 
      * @param input 
-     * @return uint32_t
+     * @return float_t
      */
-    uint32_t transform(uint32_t input) override;
+    float_t transform(float_t input) override;
     private:
     /**
      * @brief Size of the averaging buffer
@@ -37,7 +37,7 @@ class SimpleMovingAverageFilter : public Transformer{
     /**
      * @brief Averaging buffer
      */
-    uint16_t* m_averageBuffer;
+    float_t* m_averageBuffer;
     /**
      * @brief Position in buffer where the next
      * new element should be placed

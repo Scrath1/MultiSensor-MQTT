@@ -24,7 +24,7 @@ public:
      * @param input
      * @return input that has been processed through transformation chain
      */
-    uint32_t applyTransformations(uint32_t input);
+    float_t applyTransformations(float_t input);
 
 protected:
     /**
@@ -34,7 +34,7 @@ protected:
      * @param input
      * @return Transformed input
      */
-    virtual uint32_t transform(uint32_t input) = 0;
+    virtual float_t transform(float_t input) = 0;
 
     /**
      * Next step in transformation pipeline

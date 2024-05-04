@@ -4,7 +4,7 @@
 
 // Baseline from Arduino for comparison against reimplementation in Remapper
 // https://www.arduino.cc/reference/en/language/functions/math/map/
-int64_t remap(int64_t x, int64_t in_min, int64_t in_max, int64_t out_min, int64_t out_max) {
+float_t remap(float_t x, float_t in_min, float_t in_max, float_t out_min, float_t out_max) {
     return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
@@ -37,8 +37,8 @@ TEST(Transformers, SimpleMovingAverage){
 
 TEST(Transformers, Remapper){
     Remapper remapper(0, UINT16_MAX, 0, 100);
-    uint32_t ret = remapper.applyTransformations(0);
-    uint32_t exp = remap(0, 0, UINT16_MAX, 0, 100);
+    float_t ret = remapper.applyTransformations(0);
+    float_t exp = remap(0, 0, UINT16_MAX, 0, 100);
     ASSERT_EQ(ret, exp);
 
     ret = remapper.applyTransformations(65535);
@@ -60,8 +60,8 @@ TEST(Transformers, Pipelining){
     std::shared_ptr<Transformer> remapper = std::make_shared<Remapper>(128, 2048, 0, 100);
     Transformer* sma = new SimpleMovingAverageFilter(4, remapper);
 
-    uint16_t ret = sma->applyTransformations(128);
-    uint16_t exp = 128;
+    float_t ret = sma->applyTransformations(128);
+    float_t exp = 128;
     exp = remap(exp, 128, 2048, 0, 100);
     ASSERT_EQ(ret, exp);
 
