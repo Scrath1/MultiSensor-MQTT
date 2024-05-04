@@ -1,7 +1,7 @@
 #ifndef SENSOR_FACTORY_H
 #define SENSOR_FACTORY_H
 
-#include "../filters/NoFilter.h"
+#include "transformers/Transformer.h"
 
 // Add new sensor implementations here
 #include "ADCSensor.h"
@@ -16,7 +16,7 @@ class SensorFactory{
      * @return Sensor* 
      */
     static Sensor* createADCSensor(uint32_t pin,
-        std::shared_ptr<Filter> filter = NoFilter::instance){
+        std::shared_ptr<Transformer> filter = nullptr){
         return new ADCSensor(pin, filter);
     }
 };

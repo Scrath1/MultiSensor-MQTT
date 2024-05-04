@@ -1,7 +1,7 @@
 #ifndef SENSOR_H
 #define SENSOR_H
 #include <memory>
-#include "../filters/NoFilter.h"
+#include "../transformers/Transformer.h"
 
 /**
  * @brief Abstract sensor base class. Deriving classes must implement the readSensorRaw
@@ -13,10 +13,9 @@ class Sensor {
     /**
      * @brief Construct a new Sensor object
      *
-     * @param filter [IN] Pointer to filter object which should be used for sensor
-     * value filtering
+     * @param filter [IN] Pointer to optional data transformation pipeline
      */
-    Sensor(std::shared_ptr<Filter> filter = NoFilter::instance);
+    Sensor(std::shared_ptr<Transformer> transformer = nullptr);
 
     /**
      * @brief Function to call for reading the sensor.
@@ -30,10 +29,11 @@ class Sensor {
 
    protected:
     /**
-     * @brief Shared pointer to filter implementation
-     * which is applied to any value read from the sensor
+     * @brief Shared pointer to optional transformer pipeline
+     * which is applied to any value read from the sensor.
+     * Can be a nullptr
      */
-    std::shared_ptr<Filter> m_filter;
+    std::shared_ptr<Transformer> m_transformer;
 
     /**
      * @brief Returns a raw reading of the given sensor without any filtering

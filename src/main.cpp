@@ -16,7 +16,8 @@
 #include <PubSubClient.h>
 #include "global_objects.h"
 #include "sensors/SensorFactory.h"
-#include "filters/SimpleMovingAverageFilter.h"
+#include "transformers/SimpleMovingAverageFilter.h"
+#include "transformers/Remapper.h"
 
 const char *encryptionTypeToString(wifi_auth_mode_t encryptionType)
 {
@@ -97,7 +98,9 @@ void wifiSetup(){
 IPAddress serverIp(192,168,1,103);
 WiFiClient espWiFiClient;
 PubSubClient mqttClient(espWiFiClient);
-// SimpleMovingAverageFilter moistureFilter(16);
+
+const uint32_t maxReading = 2832;
+const uint32_t minReading = 926;
 Sensor* moistureSensor;
 
 void setup() {
@@ -112,7 +115,11 @@ void setup() {
     mqttClient.setServer(serverIp, 1883);
 
     // Sensor setup
-    moistureSensor = SensorFactory::createADCSensor(33);
+    // Transformer pipeline goes bottom to top, meaning that the remapping here
+    // is the last action to be performed before returning the output of the sensor
+    std::shared_ptr<Transformer> remapper = std::make_shared<Remapper>(minReading, maxReading, 100, 0);
+    std::shared_ptr<Transformer> smaFilter = std::make_shared<SimpleMovingAverageFilter>(16, remapper);
+    moistureSensor = SensorFactory::createADCSensor(33, smaFilter);
 }
 
 void reconnect() {
@@ -147,15 +154,7 @@ void loop() {
         delayCounter = 0;
         // publish value
         char buffer[8] = "\0";
-
-        
-        const uint32_t maxReading = 2832;
-        const uint32_t minReading = 926;
-
         uint32_t val = moistureSensor->readSensor();
-        if(val > maxReading) val = maxReading;
-        if(val < minReading) val = minReading;
-        val = map(val, minReading, maxReading, 100, 0);
         mqttClient.publish("MultiSensor-MQTT/moisture", itoa(val, buffer, 10));
         Serial.println(val);
     }

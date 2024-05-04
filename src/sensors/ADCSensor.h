@@ -1,7 +1,7 @@
 #ifndef ADCSENSOR_H
 #define ADCSENSOR_H
 #include "Sensor.h"
-#include "../filters/NoFilter.h"
+#include "../transformers/Transformer.h"
 
 /**
  * @brief Class for reading a sensor connected directly to an ADC input pin
@@ -10,7 +10,7 @@
  */
 class ADCSensor : public Sensor{
     public:
-    ADCSensor(uint32_t pin, std::shared_ptr<Filter> filter = NoFilter::instance);
+    ADCSensor(uint32_t pin, std::shared_ptr<Transformer> transformer = nullptr);
 
     protected:
     uint16_t readSensorRaw();
