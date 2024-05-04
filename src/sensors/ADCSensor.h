@@ -10,7 +10,7 @@
  */
 class ADCSensor : public Sensor{
     public:
-    ADCSensor(uint32_t pin, Filter& filter = NoFilterInstance);
+    ADCSensor(uint32_t pin, std::shared_ptr<Filter> filter = NoFilter::instance);
 
     protected:
     uint16_t readSensorRaw();

@@ -1,5 +1,6 @@
 #ifndef SENSOR_H
 #define SENSOR_H
+#include <memory>
 #include "../filters/NoFilter.h"
 
 /**
@@ -12,10 +13,10 @@ class Sensor {
     /**
      * @brief Construct a new Sensor object
      *
-     * @param filter [IN] Filter to apply to any value read from the sensor.
-     *  Defaults to no filter
+     * @param filter [IN] Pointer to filter object which should be used for sensor
+     * value filtering
      */
-    Sensor(Filter& filter = NoFilterInstance);
+    Sensor(std::shared_ptr<Filter> filter = NoFilter::instance);
 
     /**
      * @brief Function to call for reading the sensor.
@@ -29,9 +30,10 @@ class Sensor {
 
    protected:
     /**
-     * @brief Filter function which is applied to any value read from the sensor
+     * @brief Shared pointer to filter implementation
+     * which is applied to any value read from the sensor
      */
-    Filter& m_filter;
+    std::shared_ptr<Filter> m_filter;
 
     /**
      * @brief Returns a raw reading of the given sensor without any filtering

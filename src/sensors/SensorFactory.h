@@ -15,7 +15,8 @@ class SensorFactory{
      * @param filterFunc 
      * @return Sensor* 
      */
-    static Sensor* createADCSensor(uint32_t pin, Filter& filter = NoFilterInstance){
+    static Sensor* createADCSensor(uint32_t pin,
+        std::shared_ptr<Filter> filter = NoFilter::instance){
         return new ADCSensor(pin, filter);
     }
 };

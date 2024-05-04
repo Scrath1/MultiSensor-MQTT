@@ -97,7 +97,7 @@ void wifiSetup(){
 IPAddress serverIp(192,168,1,103);
 WiFiClient espWiFiClient;
 PubSubClient mqttClient(espWiFiClient);
-SimpleMovingAverageFilter moistureFilter(16);
+// SimpleMovingAverageFilter moistureFilter(16);
 Sensor* moistureSensor;
 
 void setup() {
@@ -112,7 +112,7 @@ void setup() {
     mqttClient.setServer(serverIp, 1883);
 
     // Sensor setup
-    moistureSensor = SensorFactory::createADCSensor(33, moistureFilter);
+    moistureSensor = SensorFactory::createADCSensor(33);
 }
 
 void reconnect() {

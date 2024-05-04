@@ -8,7 +8,7 @@
  */
 class Filter {
    public:
-    Filter() = default;
+    virtual ~Filter();
 
     /**
      * @brief Applies a filter to the given input value

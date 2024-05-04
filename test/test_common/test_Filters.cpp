@@ -4,8 +4,8 @@
 
 TEST(Filters, NoFilter){
     const uint16_t input = 512;
-    ASSERT_EQ(input, NoFilterInstance.filter(input));
-    ASSERT_EQ(input, NoFilterInstance.filter(input));
+    ASSERT_EQ(input, NoFilter::instance.get()->filter(input));
+    ASSERT_EQ(input, NoFilter::instance.get()->filter(input));
 }
 
 TEST(Filters, SimpleMovingAverage){
