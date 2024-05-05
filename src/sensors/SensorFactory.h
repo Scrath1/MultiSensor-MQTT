@@ -156,8 +156,8 @@ class SensorFactory{
         RC_t err = readKeyValue(configStr, "name", name, SENSOR_NAME_MAX_LENGTH, true);
         if(err != RC_SUCCESS) return nullptr;
 
-        uint32_t pin = 0;
-        err = readKeyValueFloat(configStr, "pin", (float_t&)pin, true);
+        int32_t pin = 0;
+        err = readKeyValueInt(configStr, "pin", pin, true);
         if(RC_SUCCESS != err) return nullptr;
 
         std::shared_ptr<Transformer> transformer = parseTransformerChainFromConfigStr(configStr);
@@ -231,6 +231,9 @@ class SensorFactory{
     static Sensor* sensorFromConfigString(char sensorType[], char configStr[]){
         if(strcmp(sensorType, "RandomSensor") == 0){
             return createRandomSensorFromStr(configStr);
+        }
+        else if(strcmp(sensorType, "ADCSensor") == 0){
+            return createADCSensorFromStr(configStr);
         }
         else return nullptr;
     }

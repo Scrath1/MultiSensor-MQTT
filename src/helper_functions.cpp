@@ -82,7 +82,20 @@ RC_t readKeyValueFloat(char str[], const char key[], float_t& value, bool remove
 
     // Try to convert string to float
     char* e;
+    errno = 0;
     value = strtof(buf, &e);
     if(*e != '\0' || errno != 0) return RC_ERROR_INVALID;
+    else return RC_SUCCESS;
+}
+
+RC_t readKeyValueInt(char str[], const char key[], int32_t& value, bool remove){
+    char buf[32];
+    RC_t err = readKeyValue(str,key, buf, sizeof(buf), remove);
+    if(RC_SUCCESS != err) return err;
+
+    // Try to convert string to int
+    errno = 0;
+    value = strtol(buf, NULL, 10);
+    if(errno != 0) return RC_ERROR_INVALID;
     else return RC_SUCCESS;
 }

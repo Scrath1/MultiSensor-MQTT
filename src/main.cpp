@@ -133,7 +133,10 @@ RC_t parseSensorFile(const char filename[]) {
 
         // Create sensor
         Sensor *ptr = SensorFactory::sensorFromConfigString(sensorTypeStr, reinterpret_cast<char *>(data));
-        if(ptr == nullptr) break;
+        if(ptr == nullptr){
+            ramLogger.logLnf("Failed to create %s", sensorTypeStr);
+            break;
+        }
         else{
             ramLogger.logLnf("Created sensor %s with %u pipeline stages",
                 ptr->getName(), ptr->getNumPipelineStages());
@@ -145,7 +148,6 @@ RC_t parseSensorFile(const char filename[]) {
     // Return error code if one occurred
     if(RC_SUCCESS != err) return err;
     else return RC_SUCCESS;
-    return err;
 }
 
 #ifndef PIO_UNIT_TESTING
@@ -166,7 +168,7 @@ void setup() {
         ramLogger.logLn("Failed to mount filesystem");
         while(1);
     }
-    wifiSetup();
+    // wifiSetup();
 
     // mqtt setup
     // mqttClient.setServer(serverIp, 1883);
@@ -207,7 +209,6 @@ void loop() {
     if (delayCounter % SENSOR_POLLING_INTERVAL_S == 0) {
         delayCounter = 0;
         // publish value
-        ramLogger.logLn("Polling sensor values...");
         for(Sensor* s : sensors){
             if(s == nullptr) continue;
             float_t val = s->readSensor();
