@@ -4,6 +4,8 @@
 // Add new transformer implementations here
 #include "transformers/SimpleMovingAverageFilter.h"
 #include "transformers/Remapper.h"
+#include "transformers/DigitalThreshold.h"
+#include "transformers/Offset.h"
 
 // Add new sensor implementations here
 #include "ADCSensor.h"
@@ -20,9 +22,6 @@ class SensorFactory{
      *  to extract the required parameters
      */
     static std::shared_ptr<Transformer> createRemapperFromStr(char configStr[]){
-        char tmp[64];
-        char* e;
-        trimLeadingWhitespace(configStr);
         float_t inMin{0}, inMax{0}, outMin{0}, outMax{0};
 
         // Parse the float parameter values
@@ -47,15 +46,27 @@ class SensorFactory{
      *  to extract the required parameters
      */
     static std::shared_ptr<Transformer> createSimpleMovingAverageFromStr(char configStr[]){
-        char tmp[64];
-        char* e;
-        trimLeadingWhitespace(configStr);
-
         float_t n{0};
         RC_t err = readKeyValueFloat(configStr, "n", n, true);
         if(RC_SUCCESS != err) return nullptr;
 
         return std::make_shared<SimpleMovingAverageFilter>(static_cast<uint32_t>(n));
+    }
+
+    static std::shared_ptr<Transformer> createDigitalThresholdFromStr(char configStr[]){
+        float_t thresh = 0;
+        RC_t err = readKeyValueFloat(configStr, "thresh", thresh, true);
+        if(RC_SUCCESS != err) return nullptr;
+
+        return std::make_shared<DigitalThreshold>(thresh);
+    }
+
+    static std::shared_ptr<Transformer> createOffsetFromStr(char configStr[]){
+        float_t offset = 0;
+        RC_t err = readKeyValueFloat(configStr, "offset", offset, true);
+        if(RC_SUCCESS != err) return nullptr;
+
+        return std::make_shared<Offset>(offset);
     }
 
     /**
@@ -135,6 +146,24 @@ class SensorFactory{
         return createRandomSensor(name, lowerBound, upperBound, transformer);
     }
 
+    /**
+     * Attempts to parse a ADCSensor configuration and its transformers from a string
+     * @param configStr [INOUT] String containing the config. This will be modified.
+     * @return Sensor* Created sensor object or nullptr if there was an error with the configStr
+     */
+    static Sensor* createADCSensorFromStr(char configStr[]){
+        char name[SENSOR_NAME_MAX_LENGTH] = "";
+        RC_t err = readKeyValue(configStr, "name", name, SENSOR_NAME_MAX_LENGTH, true);
+        if(err != RC_SUCCESS) return nullptr;
+
+        uint32_t pin = 0;
+        err = readKeyValueFloat(configStr, "pin", (float_t&)pin, true);
+        if(RC_SUCCESS != err) return nullptr;
+
+        std::shared_ptr<Transformer> transformer = parseTransformerChainFromConfigStr(configStr);
+        return createADCSensor(name, pin, transformer);
+    }
+
     public:
     /**
      * @brief Creates a dynamically allocated ADCSensor object
@@ -182,6 +211,12 @@ class SensorFactory{
         }
         else if(strcmp(transformerType, "SimpleMovingAverageFilter") == 0){
             return createSimpleMovingAverageFromStr(configStr);
+        }
+        else if(strcmp(transformerType, "DigitalThreshold") == 0){
+            return createDigitalThresholdFromStr(configStr);
+        }
+        else if(strcmp(transformerType, "Offset") == 0){
+            return createOffsetFromStr(configStr);
         }
         else return nullptr;
     }
