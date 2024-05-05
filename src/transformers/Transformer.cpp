@@ -9,3 +9,13 @@ float_t Transformer::applyTransformations(float_t input) {
     if(m_next != nullptr) return m_next->applyTransformations(transformedInput);
     else return transformedInput;
 }
+
+uint32_t Transformer::countRemainingPipelineStages() const{
+    uint32_t counter = 0;
+    std::shared_ptr<Transformer> current = m_next; 
+    while(current != nullptr){
+        counter++;
+        current = current->m_next;
+    }
+    return counter;
+}

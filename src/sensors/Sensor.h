@@ -4,6 +4,12 @@
 #include "../transformers/Transformer.h"
 
 /**
+ * @brief Maximum length of sensor name, including null terminator
+ * 
+ */
+#define SENSOR_NAME_MAX_LENGTH 64
+
+/**
  * @brief Abstract sensor base class. Deriving classes must implement the readSensorRaw
  * function which is called by the public interface function readSensor
  * 
@@ -13,9 +19,11 @@ class Sensor {
     /**
      * @brief Construct a new Sensor object
      *
-     * @param filter [IN] Pointer to optional data transformation pipeline
+     * @param name [IN] Name of the sensor.
+     *  Maximum length defined by SENSOR_NAME_MAX_LENGTH
+     * @param transformer [IN] Pointer to optional data transformation pipeline
      */
-    Sensor(std::shared_ptr<Transformer> transformer = nullptr);
+    Sensor(char name[], std::shared_ptr<Transformer> transformer = nullptr);
 
     /**
      * @brief Function to call for reading the sensor.
@@ -27,6 +35,24 @@ class Sensor {
      */
     float_t readSensor();
 
+    /**
+     * @brief Returns the name assigned to this sensor
+     * 
+     * @return const char* 
+     */
+    inline const char* getName() const {return m_sensorName;};
+
+    /**
+     * @brief Returns how many pipeline stages this sensor has
+     * 
+     * @return uint32_t 
+     */
+    inline uint32_t getNumPipelineStages() const{
+        if(m_transformer != nullptr)
+            return m_transformer->countRemainingPipelineStages() + 1;
+        else return 0;
+    }
+
    protected:
     /**
      * @brief Shared pointer to optional transformer pipeline
@@ -36,6 +62,12 @@ class Sensor {
     std::shared_ptr<Transformer> m_transformer;
 
     /**
+     * @brief Name of the sensor
+     * 
+     */
+    char m_sensorName[SENSOR_NAME_MAX_LENGTH] = "";
+
+    /**
      * @brief Returns a raw reading of the given sensor without any filtering
      * or processing.
      * This function has to be implemented by derived classes for them to work
@@ -43,6 +75,8 @@ class Sensor {
      * @return float_t 
      */
     virtual float_t readSensorRaw() = 0;
+
+    
 };
 
 #endif  // SENSOR_H

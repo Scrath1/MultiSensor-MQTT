@@ -21,4 +21,31 @@
 // ram logger before the oldest one is overwritten.
 #define RAMLOGGER_MAX_MESSAGE_COUNT (50)
 
+// Sensor config file
+// ============================================
+
+// Name of the sensor config file
+#define SENSOR_CFG_FILENAME "/sensor_config.txt"
+// Character with which the beginning of sensor config information is marked
+// in the sensor config file
+#define SENSOR_CFG_OPEN_CHAR "["
+// Character with which the end of sensor config information is marked
+// in the sensor config file
+#define SENSOR_CFG_CLOSE_CHAR "]"
+// Character with which the beginning of transformer config information is marked
+// in the sensor config file
+#define TRANSFORMER_CFG_OPEN_CHAR "{"
+// Character with which the end of transformer config information is marked
+// in the sensor config file
+#define TRANSFORMER_CFG_CLOSE_CHAR "}"
+// Characters with which the beginning and end of comments in the config files are marked
+#define CONFIG_FILE_COMMENT_DELIMITER "//"
+
+// General
+// ============================================
+
+// Defines (in seconds) how often the sensor is read and its
+// result printed to serial
+#define SENSOR_POLLING_INTERVAL_S 10
+
 #endif // CFG_H

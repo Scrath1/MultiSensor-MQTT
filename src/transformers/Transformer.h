@@ -26,6 +26,19 @@ public:
      */
     float_t applyTransformations(float_t input);
 
+    /**
+     * Adds the next transformer in the chain
+     * @param next
+     */
+    inline void setNextTransformer(std::shared_ptr<Transformer> next){m_next = std::move(next);}
+
+    /**
+     * @brief Counts how many pipeline stages follow this one
+     * 
+     * @return uint32_t 
+     */
+    uint32_t countRemainingPipelineStages() const;
+
 protected:
     /**
      * Applies the implemented transformation to the given input
@@ -39,7 +52,7 @@ protected:
     /**
      * Next step in transformation pipeline
      */
-    const std::shared_ptr<Transformer> m_next;
+    std::shared_ptr<Transformer> m_next;
 };
 
 

@@ -1,6 +1,9 @@
 #include "Sensor.h"
 
-Sensor::Sensor(std::shared_ptr<Transformer> transformer):m_transformer(transformer){}
+Sensor::Sensor(char name[], std::shared_ptr<Transformer> transformer):m_transformer(transformer){
+    strncpy(m_sensorName, name, SENSOR_NAME_MAX_LENGTH-1);
+    m_sensorName[SENSOR_NAME_MAX_LENGTH] = '\0';
+}
 
 float_t Sensor::readSensor(){
     float_t rawReading = readSensorRaw();

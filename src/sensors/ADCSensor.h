@@ -10,10 +10,18 @@
  */
 class ADCSensor : public Sensor{
     public:
-    ADCSensor(uint32_t pin, std::shared_ptr<Transformer> transformer = nullptr);
+    /**
+     * @brief Constructs a new ADCSensor which can read analog values from the
+     * analog pins of the microcontroller
+     * 
+     * @param name [IN] Name of the sensor
+     * @param pin [IN] Analog pin number
+     * @param transformer [IN] Pointer to optional data transformation pipeline
+     */
+    ADCSensor(char name[], uint32_t pin, std::shared_ptr<Transformer> transformer = nullptr);
 
     protected:
-    float_t readSensorRaw();
+    float_t readSensorRaw() override;
 
     private:
     /**
