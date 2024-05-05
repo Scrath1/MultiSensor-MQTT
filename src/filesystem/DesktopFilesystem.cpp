@@ -4,6 +4,10 @@
 #include <fstream>
 #include <iostream>
 
+DesktopFilesystem::DesktopFilesystem(){
+    successfullyMounted = true;
+}
+
 RC_t DesktopFilesystem::openFile(const char filename[], OpenMode_t openMode){
     std::ios::openmode mode;
     switch(openMode){

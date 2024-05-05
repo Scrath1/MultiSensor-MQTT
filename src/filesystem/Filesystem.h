@@ -116,6 +116,21 @@ class Filesystem {
      * @return RC_t RC_SUCCESS on success
      */
     virtual RC_t deleteFile(const char filename[]) = 0;
+
+    /**
+     * @brief Returns whether the filesystem was successfully initialized
+     * 
+     * @return true 
+     * @return false 
+     */
+    inline bool isInitialized() const {return successfullyMounted;}
+
+    protected:
+    /**
+     * @brief Variable which can be set in the constructor to indicate whether the
+     * filesystem was successfully initialized.
+     */
+    bool successfullyMounted = false;
 };
 
 #endif  // FILESYSTEM_H

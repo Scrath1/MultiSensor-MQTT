@@ -10,7 +10,7 @@ class DesktopFilesystem : public Filesystem {
     /**
      * @brief Constructor
      */
-    DesktopFilesystem() = default;
+    DesktopFilesystem();
 
     /**
      * @brief Opens a file with the given filename

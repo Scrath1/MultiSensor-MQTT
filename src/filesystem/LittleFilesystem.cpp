@@ -4,8 +4,8 @@
 #define FORMAT_LITTLEFS_IF_FAILED true
 
 LittleFilesystem::LittleFilesystem(){
-    if(!LittleFS.begin(FORMAT_LITTLEFS_IF_FAILED)){
-        // throw std::runtime_error("Failed to mount LittleFS");
+    if(LittleFS.begin(FORMAT_LITTLEFS_IF_FAILED)){
+        successfullyMounted = true;
     }
 }
 
