@@ -1,7 +1,6 @@
 #ifndef ADCSENSOR_H
 #define ADCSENSOR_H
 #include "Sensor.h"
-#include "../transformers/Transformer.h"
 
 /**
  * @brief Class for reading a sensor connected directly to an ADC input pin
@@ -15,7 +14,7 @@ class ADCSensor : public Sensor{
      * analog pins of the microcontroller
      * 
      * @param name [IN] Name of the sensor
-     * @param pin [IN] Analog pin number
+     * @param pin [IN] GPIO pin number
      * @param transformer [IN] Pointer to optional data transformation pipeline
      */
     ADCSensor(char name[], uint32_t pin, std::shared_ptr<Transformer> transformer = nullptr);

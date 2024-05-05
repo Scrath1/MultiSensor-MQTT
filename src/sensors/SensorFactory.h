@@ -10,6 +10,7 @@
 // Add new sensor implementations here
 #include "ADCSensor.h"
 #include "RandomSensor.h"
+#include "BooleanSensor.h"
 
 class SensorFactory{
     private:
@@ -164,6 +165,29 @@ class SensorFactory{
         return createADCSensor(name, pin, transformer);
     }
 
+    static Sensor* createBooleanSensorFromStr(char configStr[]){
+        char name[SENSOR_NAME_MAX_LENGTH] = "";
+        RC_t err = readKeyValue(configStr, "name", name, SENSOR_NAME_MAX_LENGTH, true);
+        if(err != RC_SUCCESS) return nullptr;
+
+        int32_t pin = 0;
+        err = readKeyValueInt(configStr, "pin", pin, true);
+        if(RC_SUCCESS != err) return nullptr;
+
+        char pinMode[32] = "";
+        err = readKeyValue(configStr, "pinMode", pinMode, sizeof(pinMode), true);
+        BooleanSensor::PinMode mode = BooleanSensor::Input;
+        if(strcmp(pinMode, "InputPullUp") == 0){
+            mode = BooleanSensor::InputPullUp;
+        }
+        else if(strcmp(pinMode, "InputPullDown") == 0){
+            mode = BooleanSensor::InputPullDown;
+        }
+
+        std::shared_ptr<Transformer> transformer = parseTransformerChainFromConfigStr(configStr);
+        return createBooleanSensor(name, pin, mode, transformer);
+    }
+
     public:
     /**
      * @brief Creates a dynamically allocated ADCSensor object
@@ -179,6 +203,12 @@ class SensorFactory{
         return new ADCSensor(name, pin, transformer);
     }
 
+    static Sensor* createBooleanSensor(char name[], uint32_t pin,
+        BooleanSensor::PinMode pinMode,
+        std::shared_ptr<Transformer> transformer = nullptr){
+        return new BooleanSensor(name, pin, pinMode, transformer);
+    }
+
     /**
      * @brief Creates a dynamically allocated RandomSensor object
      * which can output randomly generated sensor values for
@@ -191,7 +221,8 @@ class SensorFactory{
      *  processing raw sensor reading
      * @return Sensor* 
      */
-    static Sensor* createRandomSensor(char name[], float_t lowerBound, float_t upperBound, std::shared_ptr<Transformer> transformer = nullptr){
+    static Sensor* createRandomSensor(char name[], float_t lowerBound,
+        float_t upperBound, std::shared_ptr<Transformer> transformer = nullptr){
         return new RandomSensor(name, lowerBound, upperBound, transformer);
     }
 
@@ -234,6 +265,9 @@ class SensorFactory{
         }
         else if(strcmp(sensorType, "ADCSensor") == 0){
             return createADCSensorFromStr(configStr);
+        }
+        else if(strcmp(sensorType, "BooleanSensor") == 0){
+            return createBooleanSensorFromStr(configStr);
         }
         else return nullptr;
     }
