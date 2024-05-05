@@ -1,0 +1,17 @@
+//This is a comment//
+RandomSensor[
+    name: Test Thermometer
+    lowerBound: 0
+    upperBound: 255
+    //Output of topmost transformer is the final one//
+    Remapper{
+        inMin: 0
+        inMax: 255
+        outMin: -10
+        outMax: 40
+    }
+    //This is the first transformer in the chain//
+    SimpleMovingAverageFilter{
+        n: 4
+    }
+]
