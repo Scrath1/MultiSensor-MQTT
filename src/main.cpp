@@ -103,7 +103,10 @@ void wifiSetup() {
 RC_t parseSensorFile(const char filename[]) {
     // Try to open the given file
     RC_t err = filesystem->openFile(filename, Filesystem::READ_ONLY);
-    if (err != RC_SUCCESS) return err;
+    if (err != RC_SUCCESS){
+        ramLogger.logLnf("Failed to open %s", SENSOR_CFG_FILENAME);
+        return err;
+    }
 
     while (true){
         uint8_t data[1024] = "\0";
@@ -118,6 +121,23 @@ RC_t parseSensorFile(const char filename[]) {
         // if the string is now empty, stop parsing
         uint32_t dataStrLen = strlen(reinterpret_cast<char *>(data));
         if(dataStrLen == 0) break;
+
+        char* commentStart = strstr(reinterpret_cast<char *>(data), CONFIG_FILE_COMMENT_DELIMITER);
+        // if a comment delimiter was found, the data read is part of an open ended comment.
+        if(commentStart != nullptr){
+            uint32_t matchedCharsInRow = 0;
+            while(matchedCharsInRow != strlen(CONFIG_FILE_COMMENT_DELIMITER)){
+                char tmp[2] = "\0";
+                filesystem->read(reinterpret_cast<uint8_t *>(tmp), 1);
+                // count up when the char order matches that of the comment delimiter.
+                if(tmp[0] == CONFIG_FILE_COMMENT_DELIMITER[matchedCharsInRow])
+                    matchedCharsInRow++;
+                else // reset counter to 0 when a mismatched char is found
+                    matchedCharsInRow = 0;
+            }
+            // after rest of open comment was removed, skip to next read operation
+            continue;
+        }
 
         // Now only the type of the sensor should remain.
         // Copy it to a separate string and parse the config string for that sensor

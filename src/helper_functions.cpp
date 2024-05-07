@@ -29,8 +29,10 @@ RC_t trimComments(char str[], const char commentDelimiter[]){
 
         // from position of first comment delimiter, search until the next one.
         // unlike commentStart, commentEnd points to the first character after the delimiter
-        char* commentEnd = strstr(commentStart + strlen(commentDelimiter), commentDelimiter) + strlen(commentDelimiter);
+        char* commentEnd = strstr(commentStart + strlen(commentDelimiter),
+            commentDelimiter);
         if(commentEnd == nullptr) break;
+        else commentEnd += strlen(commentDelimiter);
 
         // move rest of string to former start of string to be removed
         memmove(commentStart, commentEnd, strlen(commentEnd) + 1);
