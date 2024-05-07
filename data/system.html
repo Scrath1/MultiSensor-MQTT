@@ -1,0 +1,131 @@
+<html>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MultiSensor-MQTT</title>
+
+  <!-- Styles -->
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <script src="scripts.js"></script>
+  <link rel="shortcut icon" type="image/x-icon" href="favicon.png">
+
+  <script type="text/javascript">
+    window.onload = function () {
+      getConfig()
+    }
+  </script>
+</head>
+
+<body>
+  <!-- Main layout -->
+  <div class="siimple-layout">
+    <!-- Navbar -->
+    <div class="siimple-navbar siimple-navbar--navy siimple-navbar--medium">
+      <!-- Right menu -->
+      <div class="siimple-layout--left">
+        <a class="siimple-navbar-link" href="/">Home</a>
+        <a class="siimple-navbar-link" href="/system.html">System</a>
+        <a class="siimple-navbar-link" href="/log.html">Log</a>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="siimple-content siimple-content--medium">
+      <!-- Example box -->
+      <div class="siimple-box" align="center">
+        <div class="siimple-box-subtitle">Configuration</div>
+        <div class="siimple-box-detail" id="versionstr">Firmware</div>
+      </div>
+      <div id="spinner" class="siimple-spinner siimple-spinner--navy siimple-spinner--large"></div>
+      <!-- Grid row -->
+      <div class="siimple-grid-row" id="config" style="display:none;">
+        <div class="siimple-grid-col siimple-grid-col--12">
+          <!-- Form content -->
+          <form id="configForm">
+            <div class="siimple-form">
+              <div class="siimple-form-title">Network settings</div>
+              <div class="siimple-form-detail">Configure general network settings.</div>
+              <div class="siimple-box" style="background-color:#32e7cf">
+                <!-- SSID group -->
+                <div class="siimple-form-field">
+                  <div class="siimple-form-field-label">wireless SSID</div>
+                  <input type="text" id="ssid" name="ssid" maxlength=32 class="siimple-input siimple-input--fluid"
+                    placeholder="Your SSID">
+                </div>
+                <!-- password group -->
+                <div class="siimple-form-field">
+                  <div class="siimple-form-field-label">preshared key</div>
+                  <input type="password" id="password" name="password" maxlength=64
+                    class="siimple-input siimple-input--fluid" placeholder="Your wireless password">
+                </div>
+
+                <div class="siimple-form-title">MQTT configuration</div>
+                <div class="siimple-form-detail">Configure MQTT settings.</div>
+                <div class="siimple-box" style="background-color:#32e7cf">
+                  <!-- MQTT broker IP -->
+                  <div class="siimple-form-field">
+                    <div class="siimple-form-field-label">broker address (IPv4)</div>
+                    If you do don't want to connect to a MQTT broker, configure address 0.0.0.0
+                    <input type="text" id="mqtt_broker_address" name="mqtt_broker_address" maxlength=15 class="siimple-input siimple-input--fluid">
+                  </div>
+                  <!-- broker port -->
+                  <div class="siimple-form-field">
+                    <div class="siimple-form-field-label">broker port</div>
+                    <input type="text" id="mqtt_broker_port" name="mqtt_broker_port" maxlength=4
+                      class="siimple-input siimple-input--fluid">
+                  </div>
+                  <!-- broker username -->
+                  <div class="siimple-form-field">
+                    <div class="siimple-form-field-label">username (optional)</div>
+                    <input type="text" id="mqtt_broker_username" name="mqtt_broker_username" maxlength=25
+                      class="siimple-input siimple-input--fluid">
+                  </div>
+                  <!-- broker password -->
+                  <div class="siimple-form-field">
+                    <div class="siimple-form-field-label">password (optional)</div>
+                    <input type="text" id="mqtt_broker_password" name="mqtt_broker_password" maxlength=25
+                      class="siimple-input siimple-input--fluid">
+                  </div>
+                  <!-- broker client Id -->
+                  <div class="siimple-form-field">
+                    <div class="siimple-form-field-label">client id</div>
+                    Client id must be unique // default: MultiSensor-MQTT-&lt;ESP-ID&gt;
+                    <input type="text" id="mqtt_broker_client_id" name="mqtt_broker_client_id" maxlength=25
+                      class="siimple-input siimple-input--fluid">
+                  </div>
+                  <!-- mqtt device topic -->
+                  <div class="siimple-form-field">
+                    <div class="siimple-form-field-label">device topic</div>
+                    middle part of the mqtt topic to identify the device (if more than one multisensor is used). Default is the ESP-ID.
+                    <input type="text" id="mqtt_devicetopic" name="mqtt_devicetopic" maxlength=20
+                      class="siimple-input siimple-input--fluid">
+                  </div>
+                </div>
+
+                <div class="siimple-box" style="background-color:#32e7cf">
+
+                  <!--  save and generate channel serial numbers checkbox -->
+                  <div class="siimple-form-field">
+                    <label class="siimple-label">save prefix and generate channel serial numbers</label>
+                    <div class="siimple-checkbox">
+                      <input type="checkbox" id="set_and_generate_serial" name="set_and_generate_serial">
+                      <label for="set_and_generate_serial"> </label>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Send button -->
+                <div class="siimple-form-field">
+                  <input type='button' class='siimple-btn siimple-btn--navy' value="save" name="save"
+                    onclick="writeConfig('save')">
+                  <input type='button' class='siimple-btn siimple-btn--grey' value="restart the dongle" name="restart"
+                    onclick="writeConfig('restart')">
+                </div>
+              </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>

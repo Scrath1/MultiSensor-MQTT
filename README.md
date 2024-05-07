@@ -31,3 +31,8 @@
 6. Add an if statement to the `sensorFromConfigString` function in the
    `SensorFactory.h` file which calls your function from step 5 with the
    config string.
+
+## Credit
+The webinterface design was stolen and modified from the
+[Jarolift_MQTT](https://github.com/madmartin/Jarolift_MQTT) project by madmartin
+because I suck at webinterfaces.

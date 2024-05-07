@@ -1,0 +1,11 @@
+WIFI_SSID: ExampleSSID
+//WiFi password is stored separately//
+MQTT_Broker_Address: 192.168.1.103
+MQTT_Broker_Port: 1883
+
+//Remove or comment out if no username is required
+MQTT_Username://
+//MQTT password is stored separately//
+//Topic by which multiple devices with this firmware are differentiated
+Topic: MultiSensor-MQTT/<MQTT_Device_Topic>/<Sensor_Name>//
+MQTT_Device_Topic: Test
