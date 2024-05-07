@@ -19,3 +19,13 @@ DesktopFilesystem dfs;
 // Pointer to filesystem object
 Filesystem* const filesystem = &dfs;
 #endif// ARDUINO
+
+// Vector containing pointers to sensors
+std::vector<Sensor*> sensors;
+
+// Global settings object
+settings_t settings;
+// Preferences object is used to store information
+// that should not get exposed directly in a file
+// like passwords
+Preferences preferences;

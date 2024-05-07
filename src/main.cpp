@@ -1,27 +1,14 @@
 #include <Arduino.h>
 
-#if __has_include("wifi_credentials.h")
-/**
- * This is an include for a header file which is not tracked in git.
- * It contains a define WIFI_SSID and WIFI_PASSWORD for connecting to
- * a predefined WiFi AP while debugging. If the file does not exist,
- * the program should still be able to build but will directly start
- * a SoftAP rather than trying to connect to an existing WiFi network
- * first.
- */
-#include "wifi_credentials.h"
-#endif
-
 #include <PubSubClient.h>
 #include <WiFi.h>
-
 #include <vector>
+#include <EEPROM.h>
 
+#include "webserver/webserver.h"
 #include "global_objects.h"
 #include "helper_functions.h"
 #include "sensors/SensorFactory.h"
-
-std::vector<Sensor*> sensors;
 
 const char *encryptionTypeToString(wifi_auth_mode_t encryptionType) {
     switch (encryptionType) {
@@ -75,22 +62,20 @@ void wifiSetup() {
     // get misinterpreted by the JSON debugger and therefore prevent the printing of logs
     // in the webinterface
     wifiScan();
-#ifndef WIFI_SSID
-    ramLogger.logLn("Starting SoftAP");
+
     WiFi.softAP(WIFI_AP_NAME);
-#else
     WiFi.mode(WIFI_STA);
-    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+    WiFi.begin(settings.wifi.ssid, settings.wifi.password);
     if (WL_CONNECTED != WiFi.waitForConnectResult(WIFI_CONNECTION_TIMEOUT_MS)) {
         // WiFi setup failed
-        ramLogger.logLnf("Failed to connect to %s network. Starting SoftAP instead", WIFI_SSID);
+        ramLogger.logLnf("Failed to connect to %s network. Starting SoftAP instead",
+            settings.wifi.ssid);
         WiFi.softAP(WIFI_AP_NAME);
     } else {
         // successfull connection
         ramLogger.logLnf("Successful connection. IP Address: %s", WiFi.localIP().toString().c_str());
         WiFi.setAutoReconnect(true);
     }
-#endif  // WIFI_SSID
 }
 
 /**
@@ -166,8 +151,52 @@ RC_t parseSensorFile(const char filename[]) {
     // Whatever happened, close the file
     filesystem->closeFile();
     // Return error code if one occurred
-    if(RC_SUCCESS != err) return err;
-    else return RC_SUCCESS;
+    return err;
+}
+
+RC_t parseSettingsFile(const char filename[]) {
+    // Try to open the given file
+    RC_t err = filesystem->openFile(filename, Filesystem::READ_ONLY);
+    if (err != RC_SUCCESS) return err;
+
+    while(!filesystem->eof()){
+        uint8_t data[1024] = "\0";
+        // Read line
+        err = filesystem->read(data, sizeof(data));
+        if (err != RC_SUCCESS) break;
+
+        // Remove comments from input
+        trimComments(reinterpret_cast<char *>(data), CONFIG_FILE_COMMENT_DELIMITER);
+
+        // Parse the key-value pairs required for the settings
+        char value[128] = "";
+        RC_t parseErr = readKeyValue(reinterpret_cast<char *>(data),
+            "WIFI_SSID", value, sizeof(value));
+        if(parseErr == RC_SUCCESS) strcpy(settings.wifi.ssid, value);
+        memset(value, '\0', sizeof(value));
+
+        parseErr = readKeyValue(reinterpret_cast<char *>(data),
+            "MQTT_Broker_Address", value, sizeof(value));
+        if(parseErr == RC_SUCCESS) strcpy(settings.mqtt.brokerAddress, value);
+        memset(value, '\0', sizeof(value));
+
+        parseErr = readKeyValueInt(reinterpret_cast<char *>(data),
+            "MQTT_Broker_Port", reinterpret_cast<int32_t&>(settings.mqtt.brokerPort));
+        if(RC_ERROR_INVALID == parseErr)
+            ramLogger.logLn("Config: Could not parse MQTT broker port");
+
+        parseErr = readKeyValue(reinterpret_cast<char *>(data),
+            "MQTT_Username", value, sizeof(value));
+        if(parseErr == RC_SUCCESS) strcpy(settings.mqtt.username, value);
+        memset(value, '\0', sizeof(value));
+
+        parseErr = readKeyValue(reinterpret_cast<char *>(data),
+            "MQTT_Device_Topic", value, sizeof(value));
+        if(parseErr == RC_SUCCESS) strcpy(settings.mqtt.deviceTopic, value);
+        memset(value, '\0', sizeof(value));
+    }
+    filesystem->closeFile();
+    return err;
 }
 
 #ifndef PIO_UNIT_TESTING
@@ -188,7 +217,33 @@ void setup() {
         ramLogger.logLn("Failed to mount filesystem");
         while(1);
     }
-    // wifiSetup();
+
+    // Read settings
+    if(RC_SUCCESS != parseSettingsFile(CONFIG_FILENAME))
+        ramLogger.logLn("Failed to parse config file");
+    else
+        ramLogger.logLn("Successfully parsed config file");
+
+    // if there was no clientID specified, generate one
+    if(strlen(settings.mqtt.clientID) == 0)
+        snprintf(settings.mqtt.clientID, 48, "MultiSensor-MQTT-%llX", ESP.getEfuseMac());
+    if(strlen(settings.mqtt.deviceTopic) == 0)
+        snprintf(settings.mqtt.clientID, 16, "%llX", ESP.getEfuseMac());
+
+    // Preferences initialization
+    preferences.begin("MultiSensor", false);
+    if(!preferences.isKey("WIFI_Password"))
+        preferences.putString("WIFI_Password", "PlaceholderPassword");
+    if(!preferences.isKey("MQTT_Password"))
+        preferences.putString("MQTT_Password", "PlaceholderPassword");
+    // Read passwords from preferences
+    preferences.getString("WIFI_Password", settings.wifi.password,
+        sizeof(settings.wifi.password));
+    preferences.getString("MQTT_Password", settings.mqtt.password,
+        sizeof(settings.mqtt.password));
+
+    wifiSetup();
+    webserverSetup();
 
     // mqtt setup
     // mqttClient.setServer(serverIp, 1883);

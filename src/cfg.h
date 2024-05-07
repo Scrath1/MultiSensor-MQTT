@@ -24,7 +24,8 @@
 // Sensor config file
 // ============================================
 
-// Name of the sensor config file
+// Name of the sensor config file. Keep in mind that LittleFS requires
+// absolute file paths.
 #define SENSOR_CFG_FILENAME "/sensor_config.txt"
 // Character with which the beginning of sensor config information is marked
 // in the sensor config file
@@ -47,5 +48,22 @@
 // Defines (in seconds) how often the sensor is read and its
 // result printed to serial
 #define SENSOR_POLLING_INTERVAL_S 1
+
+// Top-level topic for this sensor platform
+#define MQTT_BASE_TOPIC "MultiSensor-MQTT"
+
+// Name of the general configuration file. Keep in mind that
+// LittleFS requires absolute file paths.
+#define CONFIG_FILENAME "/config.txt"
+
+// Webserver configuration
+// ============================================
+
+// The maximum size of a dynamically allocated JSON response string.
+// This limits, how many sensor values can be returned at once over the REST API
+#define DYNAMIC_JSON_DOCUMENT_SIZE (2048)
+// Enables UART logging calls for when a request was received or answered by the webserver.
+// Disabled when not debugging for better performance
+#define ENABLE_WEBSERVER_REQUEST_LOGGING (0)
 
 #endif // CFG_H

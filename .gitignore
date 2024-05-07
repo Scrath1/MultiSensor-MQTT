@@ -42,3 +42,4 @@
 **/wifi_credentials.h
 .vscode/settings.json
 data/sensor_config.txt
+data/config.txt
