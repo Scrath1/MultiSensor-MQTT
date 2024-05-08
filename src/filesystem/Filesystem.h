@@ -5,7 +5,7 @@
 #include <Arduino.h>
 #else
 #include <cstdint>
-#endif // ARDUINO
+#endif  // ARDUINO
 
 void filesystemSetup();
 
@@ -59,9 +59,9 @@ class Filesystem {
 
     /**
      * @brief Flushes write buffer
-     * 
+     *
      * @return RC_t RC_SUCCESS on success,
-     *          RC_ERROR_OPEN if no file is open, 
+     *          RC_ERROR_OPEN if no file is open,
      *          else RC_ERROR
      */
     virtual RC_t flush() = 0;
@@ -94,8 +94,8 @@ class Filesystem {
     /**
      * @brief Returns true if the end of file has been reached
      * or no file is open
-     * 
-     * @return true eof was reached 
+     *
+     * @return true eof was reached
      * @return false eof was not reached
      */
     virtual bool eof() = 0;
@@ -119,13 +119,13 @@ class Filesystem {
 
     /**
      * @brief Returns whether the filesystem was successfully initialized
-     * 
-     * @return true 
-     * @return false 
+     *
+     * @return true
+     * @return false
      */
-    inline bool isInitialized() const {return successfullyMounted;}
+    inline bool isInitialized() const { return successfullyMounted; }
 
-    protected:
+   protected:
     /**
      * @brief Variable which can be set in the constructor to indicate whether the
      * filesystem was successfully initialized.

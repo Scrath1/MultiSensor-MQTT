@@ -5,12 +5,12 @@
 /**
  * @brief Performs a comparison of the floats a and b with a given epsilon
  * @note Taken from https://stackoverflow.com/questions/4548004/how-to-correctly-and-standardly-compare-floats
- * 
- * @param a 
- * @param b 
- * @param epsilon 
- * @return true 
- * @return false 
+ *
+ * @param a
+ * @param b
+ * @param epsilon
+ * @return true
+ * @return false
  */
 bool areEqualRel(float a, float b, float epsilon);
 
@@ -27,7 +27,7 @@ RC_t trimComments(char str[], const char commentDelimiter[]);
 /**
  * @brief Removes leading whitespace from the given string.
  * This includes space characters, tabs and linebreaks of either \r or \n form
- * 
+ *
  * @param str [INOUT] string to modify
  * @return RC_t RC_SUCCESS on success
  */
@@ -47,7 +47,7 @@ RC_t removeKeyValuePair(char str[], const char key[]);
  * @brief Reads the value for the given key from the string.
  * Optionally can also remove the key-value pair from the string,
  * starting with the key and ending with the next newline following the value.
- * 
+ *
  * @param str [INOUT] String to read from
  * @param key [IN] Key to look for
  * @param value [OUT] Output parameter for the value corresponding to the given key parameter
@@ -63,7 +63,7 @@ RC_t readKeyValue(char str[], const char key[], char value[], const uint32_t val
 /**
  * @brief Same as the function readKeyValue but attempts to convert the read value
  * into a float
- * 
+ *
  * @param str [INOUT] String to read from
  * @param key [IN] Key to look for
  * @param value [OUT] Output parameter in which the successfully converted float will be stored
@@ -79,7 +79,7 @@ RC_t readKeyValueFloat(char str[], const char key[], float_t& value, bool remove
 /**
  * @brief Same as the function readKeyValue but attempts to convert the read value
  * into an integer
- * 
+ *
  * @param str [INOUT] String to read from
  * @param key [IN] Key to look for
  * @param value [OUT] Output parameter in which the successfully converted int will be stored
@@ -92,4 +92,4 @@ RC_t readKeyValueFloat(char str[], const char key[], float_t& value, bool remove
  */
 RC_t readKeyValueInt(char str[], const char key[], int32_t& value, bool remove = false);
 
-#endif // HELPER_FUNCTIONS_H
+#endif  // HELPER_FUNCTIONS_H

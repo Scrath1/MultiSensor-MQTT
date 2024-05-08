@@ -1,14 +1,14 @@
 #include <Arduino.h>
-
 #include <PubSubClient.h>
 #include <WiFi.h>
+
 #include <vector>
 
-#include "webserver/webserver.h"
 #include "global_objects.h"
 #include "helper_functions.h"
-#include "sensors/SensorFactory.h"
 #include "mqtt.h"
+#include "sensors/SensorFactory.h"
+#include "webserver/webserver.h"
 
 const char *encryptionTypeToString(wifi_auth_mode_t encryptionType) {
     switch (encryptionType) {
@@ -69,7 +69,7 @@ void wifiSetup() {
     if (WL_CONNECTED != WiFi.waitForConnectResult(WIFI_CONNECTION_TIMEOUT_MS)) {
         // WiFi setup failed
         ramLogger.logLnf("Failed to connect to %s network. Starting SoftAP instead",
-            settings.wifi.ssid);
+                         settings.wifi.ssid);
         WiFi.softAP(WIFI_AP_NAME);
     } else {
         // successfull connection
@@ -81,19 +81,19 @@ void wifiSetup() {
 /**
  * @brief Parses the given sensor config file and creates the
  * contained sensors and their pipeline stages
- * 
+ *
  * @param filename [IN]
  * @return RC_t RC_SUCCESS on success
  */
 RC_t parseSensorFile(const char filename[]) {
     // Try to open the given file
     RC_t err = filesystem->openFile(filename, Filesystem::READ_ONLY);
-    if (err != RC_SUCCESS){
+    if (err != RC_SUCCESS) {
         ramLogger.logLnf("Failed to open %s", SENSOR_CFG_FILENAME);
         return err;
     }
 
-    while (true){
+    while (true) {
         uint8_t data[1024] = "\0";
         // Read until [
         err = filesystem->readUntil(data, sizeof(data), SENSOR_CFG_OPEN_CHAR[0]);
@@ -105,19 +105,19 @@ RC_t parseSensorFile(const char filename[]) {
 
         // if the string is now empty, stop parsing
         uint32_t dataStrLen = strlen(reinterpret_cast<char *>(data));
-        if(dataStrLen == 0) break;
+        if (dataStrLen == 0) break;
 
-        char* commentStart = strstr(reinterpret_cast<char *>(data), CONFIG_FILE_COMMENT_DELIMITER);
+        char *commentStart = strstr(reinterpret_cast<char *>(data), CONFIG_FILE_COMMENT_DELIMITER);
         // if a comment delimiter was found, the data read is part of an open ended comment.
-        if(commentStart != nullptr){
+        if (commentStart != nullptr) {
             uint32_t matchedCharsInRow = 0;
-            while(matchedCharsInRow != strlen(CONFIG_FILE_COMMENT_DELIMITER)){
+            while (matchedCharsInRow != strlen(CONFIG_FILE_COMMENT_DELIMITER)) {
                 char tmp[2] = "\0";
                 filesystem->read(reinterpret_cast<uint8_t *>(tmp), 1);
                 // count up when the char order matches that of the comment delimiter.
-                if(tmp[0] == CONFIG_FILE_COMMENT_DELIMITER[matchedCharsInRow])
+                if (tmp[0] == CONFIG_FILE_COMMENT_DELIMITER[matchedCharsInRow])
                     matchedCharsInRow++;
-                else // reset counter to 0 when a mismatched char is found
+                else  // reset counter to 0 when a mismatched char is found
                     matchedCharsInRow = 0;
             }
             // after rest of open comment was removed, skip to next read operation
@@ -138,13 +138,12 @@ RC_t parseSensorFile(const char filename[]) {
 
         // Create sensor
         Sensor *ptr = SensorFactory::sensorFromConfigString(sensorTypeStr, reinterpret_cast<char *>(data));
-        if(ptr == nullptr){
+        if (ptr == nullptr) {
             ramLogger.logLnf("Failed to create %s", sensorTypeStr);
             break;
-        }
-        else{
+        } else {
             ramLogger.logLnf("Created sensor %s with %u pipeline stages",
-                ptr->getName(), ptr->getNumPipelineStages());
+                             ptr->getName(), ptr->getNumPipelineStages());
             sensors.push_back(ptr);
         }
     }
@@ -162,53 +161,52 @@ void setup() {
     sys_delay_ms(2000);
     // put your setup code here, to run once:
     ramLogger.logLn("MultiSensor-MQTT");
-    if(filesystem->isInitialized())
+    if (filesystem->isInitialized())
         ramLogger.logLn("Successfully mounted filesystem");
-    else{
+    else {
         ramLogger.logLn("Failed to mount filesystem");
-        while(1);
+        while (1);
     }
 
     // Read settings
-    if(RC_SUCCESS != parseSettingsFile(CONFIG_FILENAME, settings))
+    if (RC_SUCCESS != parseSettingsFile(CONFIG_FILENAME, settings))
         ramLogger.logLn("Failed to parse config file");
     else
         ramLogger.logLn("Successfully parsed config file");
 
     // if there was no clientID specified, generate one
-    if(strlen(settings.mqtt.clientID) == 0)
+    if (strlen(settings.mqtt.clientID) == 0)
         snprintf(settings.mqtt.clientID, 48, "MultiSensor-MQTT-%llX", ESP.getEfuseMac());
-    if(strlen(settings.mqtt.deviceTopic) == 0)
+    if (strlen(settings.mqtt.deviceTopic) == 0)
         snprintf(settings.mqtt.clientID, 16, "%llX", ESP.getEfuseMac());
 
     // Preferences initialization
     preferences.begin("MultiSensor", false);
-    if(!preferences.isKey("WIFI_Password"))
+    if (!preferences.isKey("WIFI_Password"))
         preferences.putString("WIFI_Password", "PlaceholderPassword");
-    if(!preferences.isKey("MQTT_Password"))
+    if (!preferences.isKey("MQTT_Password"))
         preferences.putString("MQTT_Password", "PlaceholderPassword");
     // Read passwords from preferences
     preferences.getString("WIFI_Password", settings.wifi.password,
-        sizeof(settings.wifi.password));
+                          sizeof(settings.wifi.password));
     preferences.getString("MQTT_Password", settings.mqtt.password,
-        sizeof(settings.mqtt.password));
+                          sizeof(settings.mqtt.password));
 
     wifiSetup();
     webserverSetup();
 
     // mqtt setup
     // If broker address is 0.0.0.0, don't use MQTT
-    if(strcmp(settings.mqtt.brokerAddress, "0.0.0.0") != 0){
-        if(pdPASS != xTaskCreate(mqttTask, MQTT_TASK_NAME, MQTT_TASK_STACK_SIZE, NULL,   MQTT_TASK_PRIORITY, &mqttTaskHandle)){
+    if (strcmp(settings.mqtt.brokerAddress, "0.0.0.0") != 0) {
+        if (pdPASS != xTaskCreate(mqttTask, MQTT_TASK_NAME, MQTT_TASK_STACK_SIZE, NULL, MQTT_TASK_PRIORITY, &mqttTaskHandle)) {
             ramLogger.logLn("Failed to create MQTT task");
         }
     }
 
     // Sensor setup
-    if(RC_SUCCESS != parseSensorFile(SENSOR_CFG_FILENAME)){
+    if (RC_SUCCESS != parseSensorFile(SENSOR_CFG_FILENAME)) {
         ramLogger.logLn("Failed to parse sensor file");
-    }
-    else{
+    } else {
         ramLogger.logLn("Successfully parsed sensor config file");
     }
 }

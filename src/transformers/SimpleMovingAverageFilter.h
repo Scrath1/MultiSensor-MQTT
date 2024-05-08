@@ -5,8 +5,8 @@
 /**
  * Implementation of a Simple Moving Average Filter
  */
-class SimpleMovingAverageFilter : public Transformer{
-    public:
+class SimpleMovingAverageFilter : public Transformer {
+   public:
     /**
      * Constructs a SimpleMovingAverageFilter with n data points
      * @param n [IN] Number of last samples to average including the current one
@@ -17,19 +17,20 @@ class SimpleMovingAverageFilter : public Transformer{
                               std::shared_ptr<Transformer> next = std::shared_ptr<Transformer>());
     ~SimpleMovingAverageFilter() override;
 
-    protected:
+   protected:
     /**
      * @brief Applies a SMA filter to the given input
-     * 
+     *
      * @note The first call to this objects filter function after
      * the instantiation completely fills the buffer with the
      * given input to provide a baseline for the average
-     * 
-     * @param input 
+     *
+     * @param input
      * @return float_t
      */
     float_t transform(float_t input) override;
-    private:
+
+   private:
     /**
      * @brief Size of the averaging buffer
      */
@@ -50,4 +51,4 @@ class SimpleMovingAverageFilter : public Transformer{
     bool m_bufferInitialized = false;
 };
 
-#endif // SIMPLE_MOVING_AVERAGE_FILTER_H
+#endif  // SIMPLE_MOVING_AVERAGE_FILTER_H

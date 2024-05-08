@@ -6,8 +6,8 @@
  * Implementation of a range remapper to transform e.g. values from the range
  * 0-65535 to 0-100
  */
-class Remapper : public Transformer{
-public:
+class Remapper : public Transformer {
+   public:
     /**
      * Constructs a Remapper object which can map values from one range to another
      * @param inMin [IN] Minimum value of input range
@@ -20,8 +20,7 @@ public:
     Remapper(float_t inMin, float_t inMax, float_t outMin, float_t outMax,
              std::shared_ptr<Transformer> next = std::shared_ptr<Transformer>());
 
-protected:
-
+   protected:
     /**
      * Applies the remapping implementation
      * @param input
@@ -29,11 +28,11 @@ protected:
      */
     float_t transform(float_t input) override;
 
-private:
+   private:
     /**
      * Variables to store the remap range configuration
      */
     const float_t m_inMin, m_inMax, m_outMin, m_outMax;
 };
 
-#endif //REMAPPER_H
+#endif  // REMAPPER_H

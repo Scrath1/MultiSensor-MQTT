@@ -1,9 +1,10 @@
 #include "mqtt.h"
+
 #include <PubSubClient.h>
 #include <WiFi.h>
+
 #include "global.h"
 #include "global_objects.h"
-
 
 TaskHandle_t mqttTaskHandle;
 WiFiClient espWiFiClient;
@@ -13,7 +14,7 @@ void reconnect() {
     // Loop until we're reconnected
     while (!mqttClient.connected()) {
         ramLogger.logLnf("Attempting MQTT connection, ID: %s, User: %s",
-            settings.mqtt.clientID, settings.mqtt.username);
+                         settings.mqtt.clientID, settings.mqtt.username);
         // Attempt to connect
         if (mqttClient.connect(
                 settings.mqtt.clientID,
@@ -28,7 +29,7 @@ void reconnect() {
     }
 }
 
-void mqttTask(void* pvParameters){
+void mqttTask(void* pvParameters) {
     TickType_t lastWakeTime;
 
     // setup
@@ -40,19 +41,19 @@ void mqttTask(void* pvParameters){
         serverIP,
         settings.mqtt.brokerPort);
 
-    while(1){
+    while (1) {
         // Get current tick count for more precise cycle time calculation
         lastWakeTime = xTaskGetTickCount();
 
         // Process messages and maintain connection
-        if(!mqttClient.connected()){
+        if (!mqttClient.connected()) {
             // lost connection. Try to reconnect...
             int8_t err = mqttClient.connect(
                 settings.mqtt.clientID,
                 settings.mqtt.username,
                 settings.mqtt.password);
             bool stopFlag = false;
-            switch(err){
+            switch (err) {
                 default:
                     break;
                 case MQTT_CONNECTION_TIMEOUT:
@@ -82,7 +83,7 @@ void mqttTask(void* pvParameters){
                     stopFlag = true;
                     break;
             }
-            if(stopFlag){
+            if (stopFlag) {
                 ramLogger.logLn("Critical MQTT error. Halting MQTT task");
                 vTaskSuspend(NULL);
             }
@@ -90,7 +91,7 @@ void mqttTask(void* pvParameters){
         mqttClient.loop();
 
         // Sleep until next connection check is due
-        if(pdFALSE == xTaskDelayUntil(&lastWakeTime, pdMS_TO_TICKS(MQTT_TASK_CYCLE_TIME_MS))){
+        if (pdFALSE == xTaskDelayUntil(&lastWakeTime, pdMS_TO_TICKS(MQTT_TASK_CYCLE_TIME_MS))) {
             ramLogger.logLn("MQTT task cycle time too low");
         }
     }

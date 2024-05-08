@@ -107,7 +107,7 @@ class LittleFilesystem : public Filesystem {
     RC_t deleteFile(const char filename[]);
 
    private:
-   /**
+    /**
      * @brief Keeps track of in which mode the file was opened
      */
     OpenMode_t fileMode;

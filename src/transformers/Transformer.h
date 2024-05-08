@@ -1,10 +1,11 @@
 #ifndef TRANSFORMER_H
 #define TRANSFORMER_H
 #include <memory>
+
 #include "global.h"
 
 class Transformer {
-public:
+   public:
     /**
      * Constructs a Transformer object which takes the following transformation object
      * as an optional parameter
@@ -30,16 +31,16 @@ public:
      * Adds the next transformer in the chain
      * @param next
      */
-    inline void setNextTransformer(std::shared_ptr<Transformer> next){m_next = std::move(next);}
+    inline void setNextTransformer(std::shared_ptr<Transformer> next) { m_next = std::move(next); }
 
     /**
      * @brief Counts how many pipeline stages follow this one
-     * 
-     * @return uint32_t 
+     *
+     * @return uint32_t
      */
     uint32_t countRemainingPipelineStages() const;
 
-protected:
+   protected:
     /**
      * Applies the implemented transformation to the given input
      * and returns the output. Transformations can be a filter,
@@ -55,5 +56,4 @@ protected:
     std::shared_ptr<Transformer> m_next;
 };
 
-
-#endif //TRANSFORMER_H
+#endif  // TRANSFORMER_H

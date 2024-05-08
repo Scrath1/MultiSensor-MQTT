@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
+
 #include <string>
+
 #include "RamLogger.h"
 // uncomment line below if you plan to use GMock
 // #include <gmock/gmock.h>
@@ -12,17 +14,16 @@
 // Number of test strings available
 #define NUM_TEST_STRINGS 7
 
-#if(NUM_START_ENTRIES >= MAX_ENTRIES)
+#if (NUM_START_ENTRIES >= MAX_ENTRIES)
 #error Number of start entries in the buffer should be less than maximum
 #endif
 
-class RamLoggerTest : public testing::Test
-{
-protected:
+class RamLoggerTest : public testing::Test {
+   protected:
     /**
      * Make sure non-const objects are part of the test fixture or they wont be
      * reset between each test
-    */
+     */
     // Buffer used by the RamLogger
     char buffer[MAX_STRING_LENGTH * MAX_ENTRIES];
     // Actual RamLogger object
@@ -30,8 +31,7 @@ protected:
     // Strings used for testing the RamLogger
     const char *testStrings[NUM_TEST_STRINGS];
 
-    void SetUp() override
-    {
+    void SetUp() override {
         // Prepare test data
         testStrings[0] = "Lorem";
         testStrings[1] = "ipsum";
@@ -42,8 +42,7 @@ protected:
         testStrings[6] = "adipiscing";
 
         // Enter some test data but don't fill RamLogger up completely
-        for (uint32_t i = 0; i < NUM_START_ENTRIES; i++)
-        {
+        for (uint32_t i = 0; i < NUM_START_ENTRIES; i++) {
             RC_t err = testLogger.logLn(testStrings[i]);
             ASSERT_EQ(err, RC_SUCCESS);
         }
@@ -53,9 +52,8 @@ protected:
 /**
  * @brief Tests that the remaining free entries in the RamLogger are
  * calculated correctly
-*/
-TEST_F(RamLoggerTest, RemainingSpaceCorrect)
-{
+ */
+TEST_F(RamLoggerTest, RemainingSpaceCorrect) {
     // Calculate how many strings should be in the ramLogger now
     uint32_t expectedRemainingEntries = MAX_ENTRIES - NUM_START_ENTRIES;
 
@@ -67,11 +65,11 @@ TEST_F(RamLoggerTest, RemainingSpaceCorrect)
     ASSERT_EQ(testLogger.remaining(), expectedRemainingEntries);
 
     // Remove oldest entry
-    char tmp[MAX_STRING_LENGTH+1];
+    char tmp[MAX_STRING_LENGTH + 1];
     testLogger.pop(tmp, MAX_STRING_LENGTH);
     expectedRemainingEntries++;
     ASSERT_EQ(testLogger.remaining(), expectedRemainingEntries);
-    
+
     testLogger.clear();
     ASSERT_EQ(testLogger.available(), 0);
     ASSERT_EQ(testLogger.remaining(), MAX_ENTRIES);
@@ -79,12 +77,12 @@ TEST_F(RamLoggerTest, RemainingSpaceCorrect)
 
 /**
  * @brief Tests that the RamLoggers msgCounter increments correctly
-*/
-TEST_F(RamLoggerTest, msgCounterIncrementTest){
+ */
+TEST_F(RamLoggerTest, msgCounterIncrementTest) {
     uint32_t expectedMsgCounter = NUM_START_ENTRIES;
     EXPECT_EQ(testLogger.getMsgCounter(), expectedMsgCounter);
 
-    char entry[MAX_STRING_LENGTH+1];
+    char entry[MAX_STRING_LENGTH + 1];
     RC_t err = testLogger.pop(entry, MAX_STRING_LENGTH);
     ASSERT_EQ(err, RC_SUCCESS);
     // Message counter should not change when popping from the buffer
@@ -93,16 +91,16 @@ TEST_F(RamLoggerTest, msgCounterIncrementTest){
     err = testLogger.logLn("foo");
     ASSERT_EQ(err, RC_SUCCESS);
     // Message counter should have incremented by one
-    EXPECT_EQ(testLogger.getMsgCounter(), expectedMsgCounter+1);
+    EXPECT_EQ(testLogger.getMsgCounter(), expectedMsgCounter + 1);
 }
 
 /**
  * @brief Tests the indexing of the available get function
-*/
-TEST_F(RamLoggerTest, GetFunctionTest){
+ */
+TEST_F(RamLoggerTest, GetFunctionTest) {
     // Oldest entry after setup should be the first test string
-    char entry[MAX_STRING_LENGTH+1];
-    RC_t err = testLogger.get(0,entry, MAX_STRING_LENGTH);
+    char entry[MAX_STRING_LENGTH + 1];
+    RC_t err = testLogger.get(0, entry, MAX_STRING_LENGTH);
     ASSERT_EQ(err, RC_SUCCESS);
     EXPECT_STREQ(entry, testStrings[0]);
 
@@ -117,7 +115,7 @@ TEST_F(RamLoggerTest, GetFunctionTest){
     EXPECT_STREQ(entry, "foo");
 
     // test string length checking
-    err = testLogger.get(0, entry, MAX_STRING_LENGTH-1);
+    err = testLogger.get(0, entry, MAX_STRING_LENGTH - 1);
     EXPECT_EQ(err, RC_ERROR_MEMORY);
 
     // clear testLogger buffer
@@ -139,16 +137,16 @@ TEST_F(RamLoggerTest, GetFunctionTest){
 /**
  * @brief Tests the correct calculation of each messages number
  */
-TEST_F(RamLoggerTest, GetWithMsgNumberTest){
-    char entry[MAX_STRING_LENGTH+1];
+TEST_F(RamLoggerTest, GetWithMsgNumberTest) {
+    char entry[MAX_STRING_LENGTH + 1];
     uint32_t msgId = 0;
 
     // First with negative indexing
-    uint32_t expectedMsgID = NUM_START_ENTRIES-1;
+    uint32_t expectedMsgID = NUM_START_ENTRIES - 1;
     RC_t err = testLogger.get(-1, entry, MAX_STRING_LENGTH, msgId);
-    ASSERT_EQ(err , RC_SUCCESS);
+    ASSERT_EQ(err, RC_SUCCESS);
     EXPECT_EQ(msgId, expectedMsgID);
-    EXPECT_STREQ(entry, testStrings[NUM_START_ENTRIES-1]);
+    EXPECT_STREQ(entry, testStrings[NUM_START_ENTRIES - 1]);
 
     // Then with positive
     expectedMsgID = 0;
@@ -162,10 +160,10 @@ TEST_F(RamLoggerTest, GetWithMsgNumberTest){
  * @brief Test that the oldest string is replaced in the RamLogger
  * if the buffer is full
  */
-TEST_F(RamLoggerTest, RingbufferingTest){
+TEST_F(RamLoggerTest, RingbufferingTest) {
     // fill up the rest of the RamLogger with teststrings
     ASSERT_EQ(MAX_STRING_LENGTH, testLogger.getMaxMsgLen());
-    for(uint32_t i = NUM_START_ENTRIES; i < MAX_ENTRIES; i++){
+    for (uint32_t i = NUM_START_ENTRIES; i < MAX_ENTRIES; i++) {
         RC_t err = testLogger.logLn(testStrings[i]);
         ASSERT_EQ(err, RC_SUCCESS);
     }
@@ -173,7 +171,7 @@ TEST_F(RamLoggerTest, RingbufferingTest){
     ASSERT_EQ(testLogger.getMsgCounter(), MAX_ENTRIES);
 
     // Oldest string should now be the first test string
-    char entry[MAX_STRING_LENGTH+1];
+    char entry[MAX_STRING_LENGTH + 1];
     entry[MAX_STRING_LENGTH] = '\0';
     uint32_t msgId = 0;
     RC_t err = testLogger.get(0, entry, MAX_STRING_LENGTH, msgId);
@@ -194,18 +192,18 @@ TEST_F(RamLoggerTest, RingbufferingTest){
 
 /**
  * @brief Tests that the formatting using logf is equivalent to that of snprintf
- * 
+ *
  */
-TEST_F(RamLoggerTest, FormattedLogTest){
+TEST_F(RamLoggerTest, FormattedLogTest) {
     const uint32_t maxStringLength = 64;
     const uint32_t maxEntries = 3;
     char buffer[maxStringLength * maxEntries];
     RamLogger localTestLogger{buffer, sizeof(buffer), maxEntries};
 
     // check with logf
-    char expected[maxStringLength+1];
+    char expected[maxStringLength + 1];
     snprintf(expected, sizeof(expected), "Literally %u", 1984);
-    char result[maxStringLength+1];
+    char result[maxStringLength + 1];
     localTestLogger.logf("Literally %u", 1984);
     localTestLogger.get(-1, result, maxStringLength);
     EXPECT_STREQ(result, expected);

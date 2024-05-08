@@ -74,6 +74,6 @@
 #define MQTT_CONNECTION_KEEPALIVE_S 15
 // Defines in which interval incoming messages are processed and the
 // connection to the server is refreshed
-#define MQTT_TASK_CYCLE_TIME_MS (5000) 
+#define MQTT_TASK_CYCLE_TIME_MS (5000)
 
-#endif // CFG_H
+#endif  // CFG_H
