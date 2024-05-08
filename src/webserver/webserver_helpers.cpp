@@ -3,6 +3,21 @@
 #include "global_objects.h"
 #include "filesystem/Filesystem.h"
 
+void listAllParams(const AsyncWebServerRequest* request) {
+    // List all parameters
+    int params = request->params();
+    for (int i = 0; i < params; i++) {
+        AsyncWebParameter* p = request->getParam(i);
+        if (p->isFile()) {  // p->isPost() is also true
+            Serial.printf("FILE[%s]: %s, size: %u\n", p->name().c_str(), p->value().c_str(), p->size());
+        } else if (p->isPost()) {
+            Serial.printf("POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
+        } else {
+            Serial.printf("GET[%s]: %s\n", p->name().c_str(), p->value().c_str());
+        }
+    }
+}
+
 bool isNumeric(const AsyncWebParameter* const p){
     String str = p->value();
     for(byte i=0; i<str.length();i++){

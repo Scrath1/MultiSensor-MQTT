@@ -7,6 +7,12 @@
 #include "global.h"
 
 /**
+ * @brief Prints out all parameters in a request to serial
+ * @param request [IN]
+ */
+void listAllParams(const AsyncWebServerRequest* request);
+
+/**
  * @brief Checks if the given parameter string holds a numeric value
  * 
  * @param p [IN] Parameter string to check

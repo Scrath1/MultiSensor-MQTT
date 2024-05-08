@@ -102,11 +102,17 @@
                       class="siimple-input siimple-input--fluid">
                   </div>
                 </div>
+                <div class="siimple-form-title">Sensor configuration</div>
+                <div class="siimple-form-detail">Edit field for the sensor configuration file</div>
+                <div class="siimple-form-field">
+                  
+                  <textarea type="text" id="sensor_config" name="sensor_config" rows=16 class="siimple-textarea siimple-textarea--fluid" onchange="setSensorConfigChangedFlag()"></textarea>
+                </div>
                 <!-- Send button -->
                 <div class="siimple-form-field">
-                  <input type='button' class='siimple-btn siimple-btn--navy' value="save" name="save"
+                  <input type='button' class='siimple-btn siimple-btn--navy button' value="save" name="save"
                     onclick="submitSettingsForm()"/>
-                  <input type='button' class='siimple-btn siimple-btn--grey' value="restart the dongle" name="restart"
+                  <input type='button' class='siimple-btn siimple-btn--grey button' value="restart the dongle" name="restart"
                     onclick="restartDevice()"/>
                 </div>
               </div>
@@ -115,4 +121,6 @@
       </div>
     </div>
   </div>
+  <!-- For toast messages -->
+  <div id="snackbar"></div>
 </body>

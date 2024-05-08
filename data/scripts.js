@@ -1,4 +1,9 @@
 /**
+ * Indicates whether the user has changed something in the sensor config textarea
+ */
+let sensorConfigChangedFlag = false;
+
+/**
  * Sends a restart command to the controller
  */
 function restartDevice() {
@@ -13,6 +18,10 @@ function restartDevice() {
 
     clearLogMessages();
     toast("Restarting device");
+}
+
+function setSensorConfigChangedFlag(){
+    sensorConfigChangedFlag = true;
 }
 
 /**
@@ -48,8 +57,20 @@ function getEventLog() {
 }
 
 function getConfig() {
-    var http = new XMLHttpRequest();
-    http.onreadystatechange = function () {
+    // sensor settings
+    let http1 = new XMLHttpRequest();
+    http1.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+            document.getElementById("sensor_config").value = this.responseText;
+        }
+    }
+    http1.open("GET", "api/file?sensorConfig", true);
+    http1.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    http1.send();
+
+    // general settings
+    let http2 = new XMLHttpRequest();
+    http2.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {
 
             document.getElementById('spinner').style.display = "none";
@@ -63,9 +84,9 @@ function getConfig() {
             document.getElementById("mqtt_devicetopic").value = jsonData["deviceTopic"];
         }
     };
-    http.open("GET", "api/system?getConfig", true);
-    http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-    http.send();
+    http2.open("GET", "api/system?getConfig", true);
+    http2.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    http2.send();
 }
 
 function submitSettingsForm() {
@@ -81,6 +102,9 @@ function submitSettingsForm() {
         + "&mqttPassword=" + document.getElementById("mqtt_broker_password").value
         + "&clientID=" + document.getElementById("mqtt_broker_client_id").value
         + "&deviceTopic=" + document.getElementById("mqtt_devicetopic").value;
+    if(sensorConfigChangedFlag){
+        bodyContent += "&sensorConfig=" + document.getElementById("sensor_config").value;
+    }
 
     fetch("/api/system", {
         method: "post",
@@ -90,6 +114,9 @@ function submitSettingsForm() {
 
         body: bodyContent
     })
-    toast("Updated settings. Refreshing window in 3 seconds")
-    sleep(3000).then(location.reload());
+
+    toast("Settings saved");
+    // reset sensor config changed flag
+    sensorConfigChangedFlag = false;
+    sleep(3000).then(() => getConfig());
 }

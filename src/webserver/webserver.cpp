@@ -148,14 +148,31 @@ void systemEndpointSetup(){
             ramLogger.logLnf("Updated deviceTopic to %s", p->value().c_str());
             changedSettingCount++;
         }
+        if(request->hasParam("sensorConfig", true)){
+            AsyncWebParameter* p = request->getParam("sensorConfig", true);
+            if(RC_SUCCESS == filesystem->openFile(SENSOR_CFG_FILENAME, Filesystem::WRITE_TRUNCATE)){
+                const char* text = p->value().c_str();
+                // listAllParams(request);
+                const uint32_t textLen = strlen(text);
+                filesystem->write((uint8_t*) text, textLen);
+                filesystem->closeFile();
+                ramLogger.logLnf("Updated sensor settings file (%u characters written)", textLen);
+                changedSettingCount++;
+            }
+            else ramLogger.logLn("Failed to update sensor config file");
+        }
 
         // If any settings were changed, write them back and reboot
         if(changedSettingCount > 0){
             RC_t err = writeToSettingsFile(CONFIG_FILENAME, settings);
             if(RC_SUCCESS != err)
                 ramLogger.logLnf("Failed to write settings file, Error Code=%i", err);
-            else
+            else{
+                // Short delay to finish printing potential debug messages
+                ramLogger.logLn("Restarting system in 3 seconds");
+                delay(3000);
                 ESP.restart();
+            }
         }
 
         // Check this parameter last as it will stop code execution after it
