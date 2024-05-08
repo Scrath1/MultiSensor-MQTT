@@ -3,12 +3,14 @@
 #include <PubSubClient.h>
 #include <WiFi.h>
 #include <vector>
-#include <EEPROM.h>
 
 #include "webserver/webserver.h"
 #include "global_objects.h"
 #include "helper_functions.h"
 #include "sensors/SensorFactory.h"
+
+WiFiClient espWiFiClient;
+PubSubClient mqttClient(espWiFiClient);
 
 const char *encryptionTypeToString(wifi_auth_mode_t encryptionType) {
     switch (encryptionType) {
@@ -154,56 +156,7 @@ RC_t parseSensorFile(const char filename[]) {
     return err;
 }
 
-RC_t parseSettingsFile(const char filename[]) {
-    // Try to open the given file
-    RC_t err = filesystem->openFile(filename, Filesystem::READ_ONLY);
-    if (err != RC_SUCCESS) return err;
-
-    while(!filesystem->eof()){
-        uint8_t data[1024] = "\0";
-        // Read line
-        err = filesystem->read(data, sizeof(data));
-        if (err != RC_SUCCESS) break;
-
-        // Remove comments from input
-        trimComments(reinterpret_cast<char *>(data), CONFIG_FILE_COMMENT_DELIMITER);
-
-        // Parse the key-value pairs required for the settings
-        char value[128] = "";
-        RC_t parseErr = readKeyValue(reinterpret_cast<char *>(data),
-            "WIFI_SSID", value, sizeof(value));
-        if(parseErr == RC_SUCCESS) strcpy(settings.wifi.ssid, value);
-        memset(value, '\0', sizeof(value));
-
-        parseErr = readKeyValue(reinterpret_cast<char *>(data),
-            "MQTT_Broker_Address", value, sizeof(value));
-        if(parseErr == RC_SUCCESS) strcpy(settings.mqtt.brokerAddress, value);
-        memset(value, '\0', sizeof(value));
-
-        parseErr = readKeyValueInt(reinterpret_cast<char *>(data),
-            "MQTT_Broker_Port", reinterpret_cast<int32_t&>(settings.mqtt.brokerPort));
-        if(RC_ERROR_INVALID == parseErr)
-            ramLogger.logLn("Config: Could not parse MQTT broker port");
-
-        parseErr = readKeyValue(reinterpret_cast<char *>(data),
-            "MQTT_Username", value, sizeof(value));
-        if(parseErr == RC_SUCCESS) strcpy(settings.mqtt.username, value);
-        memset(value, '\0', sizeof(value));
-
-        parseErr = readKeyValue(reinterpret_cast<char *>(data),
-            "MQTT_Device_Topic", value, sizeof(value));
-        if(parseErr == RC_SUCCESS) strcpy(settings.mqtt.deviceTopic, value);
-        memset(value, '\0', sizeof(value));
-    }
-    filesystem->closeFile();
-    return err;
-}
-
 #ifndef PIO_UNIT_TESTING
-
-IPAddress serverIp(192, 168, 1, 103);
-WiFiClient espWiFiClient;
-PubSubClient mqttClient(espWiFiClient);
 
 void setup() {
     Serial.begin(115200);
@@ -219,7 +172,7 @@ void setup() {
     }
 
     // Read settings
-    if(RC_SUCCESS != parseSettingsFile(CONFIG_FILENAME))
+    if(RC_SUCCESS != parseSettingsFile(CONFIG_FILENAME, settings))
         ramLogger.logLn("Failed to parse config file");
     else
         ramLogger.logLn("Successfully parsed config file");
@@ -246,7 +199,12 @@ void setup() {
     webserverSetup();
 
     // mqtt setup
-    // mqttClient.setServer(serverIp, 1883);
+    IPAddress serverIP;
+    serverIP.fromString(settings.mqtt.brokerAddress);
+    ramLogger.logLnf("MQTT broker address: %s", serverIP.toString().c_str());
+    mqttClient.setServer(
+        serverIP,
+        settings.mqtt.brokerPort);
 
     // Sensor setup
     if(RC_SUCCESS != parseSensorFile(SENSOR_CFG_FILENAME)){
@@ -260,13 +218,15 @@ void setup() {
 void reconnect() {
     // Loop until we're reconnected
     while (!mqttClient.connected()) {
-        Serial.print("Attempting MQTT connection...");
+        ramLogger.logLnf("Attempting MQTT connection, ID: %s, User: %s",
+            settings.mqtt.clientID, settings.mqtt.username);
         // Attempt to connect
-        if (mqttClient.connect("arduinoClient")) {
+        if (mqttClient.connect(
+                settings.mqtt.clientID,
+                settings.mqtt.username,
+                settings.mqtt.password)) {
             Serial.println("connected");
         } else {
-            Serial.print("failed, rc=");
-            Serial.print(mqttClient.state());
             Serial.println(" try again in 5 seconds");
             // Wait 5 seconds before retrying
             delay(5000);
@@ -276,10 +236,10 @@ void reconnect() {
 
 void loop() {
     static uint32_t delayCounter = 0;
-    // if (!mqttClient.connected()) {
-    //     reconnect();
-    // }
-    // mqttClient.loop();
+    if (!mqttClient.connected()) {
+        reconnect();
+    }
+    mqttClient.loop();
     delay(1000);
     if (delayCounter % SENSOR_POLLING_INTERVAL_S == 0) {
         delayCounter = 0;
@@ -290,6 +250,16 @@ void loop() {
             Serial.print(s->getName());
             Serial.print(": ");
             Serial.println(val);
+            // If the client is connected, publish the sensor data
+            if(mqttClient.connected()){
+                char topic[256] = "";
+                snprintf(topic, sizeof(topic), "%s/%s/%s",
+                    MQTT_BASE_TOPIC, settings.mqtt.deviceTopic,
+                    s->getName());
+                char valStr[32];
+                snprintf(valStr, sizeof(valStr), "%f", val);
+                mqttClient.publish(topic, valStr);
+            }
         }
     }
     delayCounter++;

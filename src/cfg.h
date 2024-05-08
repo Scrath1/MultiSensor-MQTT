@@ -47,7 +47,7 @@
 
 // Defines (in seconds) how often the sensor is read and its
 // result printed to serial
-#define SENSOR_POLLING_INTERVAL_S 1
+#define SENSOR_POLLING_INTERVAL_S 10
 
 // Top-level topic for this sensor platform
 #define MQTT_BASE_TOPIC "MultiSensor-MQTT"

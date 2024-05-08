@@ -26,6 +26,10 @@ function toast(msg) {
     setTimeout(function () { snackbar.className = snackbar.className.replace("show", ""); }, 3000);
 }
 
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
 function getEventLog() {
     var http = new XMLHttpRequest();
     http.onreadystatechange = function () {
@@ -47,7 +51,7 @@ function getConfig() {
     var http = new XMLHttpRequest();
     http.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {
-            
+
             document.getElementById('spinner').style.display = "none";
             document.getElementById('config').style.display = "block";
             let jsonData = JSON.parse(this.responseText);
@@ -62,4 +66,30 @@ function getConfig() {
     http.open("GET", "api/system?getConfig", true);
     http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
     http.send();
+}
+
+function submitSettingsForm() {
+    let bodyContent = "ssid=" + document.getElementById("ssid").value;
+    let wifiPassword = document.getElementById("password").value;
+    if(wifiPassword != ""){
+        bodyContent += "wifiPassword=" + wifiPassword;
+    }
+
+    bodyContent += "&brokerAddress=" + document.getElementById("mqtt_broker_address").value
+        + "&brokerPort=" + document.getElementById("mqtt_broker_port").value
+        + "&username=" + document.getElementById("mqtt_broker_username").value
+        + "&mqttPassword=" + document.getElementById("mqtt_broker_password").value
+        + "&clientID=" + document.getElementById("mqtt_broker_client_id").value
+        + "&deviceTopic=" + document.getElementById("mqtt_devicetopic").value;
+
+    fetch("/api/system", {
+        method: "post",
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+
+        body: bodyContent
+    })
+    toast("Updated settings. Refreshing window in 3 seconds")
+    sleep(3000).then(location.reload());
 }

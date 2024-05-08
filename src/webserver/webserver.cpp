@@ -83,12 +83,82 @@ void systemEndpointSetup(){
         #endif // ENABLE_WEBSERVER_REQUEST_LOGGING
         // check for post parameter time
 
-        // ToDo: Extend for settings form
+        // Parameter handling
         uint32_t changedSettingCount = 0;
-        if(request->hasParam("WifiSSID",true)){
+        if(request->hasParam("ssid", true)){
+            AsyncWebParameter* p = request->getParam("ssid", true);
+            strcpy(settings.wifi.ssid, p->value().c_str());
+            ramLogger.logLnf("Updated SSID to %s", p->value().c_str());
             changedSettingCount++;
         }
-        
+        if(request->hasParam("ssid", true)){
+            AsyncWebParameter* p = request->getParam("ssid", true);
+            strcpy(settings.wifi.ssid, p->value().c_str());
+            ramLogger.logLnf("Updated SSID to %s", p->value().c_str());
+            changedSettingCount++;
+        }
+        if(request->hasParam("wifiPassword", true)){
+            AsyncWebParameter* p = request->getParam("wifiPassword", true);
+            strcpy(settings.wifi.password, p->value().c_str());
+            // write to non-volatile storage
+            preferences.putString("WIFI_Password", p->value().c_str());
+            ramLogger.logLn("Updated WiFi password");
+            changedSettingCount++;
+        }
+        if(request->hasParam("brokerAddress", true)){
+            AsyncWebParameter* p = request->getParam("brokerAddress", true);
+            strcpy(settings.mqtt.brokerAddress, p->value().c_str());
+            ramLogger.logLnf("Updated broker address to %s", p->value().c_str());
+            changedSettingCount++;
+        }
+        if(request->hasParam("brokerPort", true)){
+            AsyncWebParameter* p = request->getParam("brokerPort", true);
+            
+            int32_t port = 0;
+            // make sure that the port parameter is numeric
+            if(paramToInt(p, port)){
+                settings.mqtt.brokerPort = port;
+                ramLogger.logLnf("Updated broker port to %u", port);
+                changedSettingCount++;
+            }
+        }
+        if(request->hasParam("username", true)){
+            AsyncWebParameter* p = request->getParam("username", true);
+            strcpy(settings.mqtt.username, p->value().c_str());
+            ramLogger.logLnf("Updated username to %s", p->value().c_str());
+            changedSettingCount++;
+        }
+        if(request->hasParam("mqttPassword", true)){
+            AsyncWebParameter* p = request->getParam("mqttPassword", true);
+            strcpy(settings.mqtt.password, p->value().c_str());
+            // write to non-volatile storage
+            preferences.putString("MQTT_Password", p->value().c_str());
+            ramLogger.logLn("Updated MQTT password");
+            changedSettingCount++;
+        }
+        if(request->hasParam("clientID", true)){
+            AsyncWebParameter* p = request->getParam("clientID", true);
+            strcpy(settings.mqtt.clientID, p->value().c_str());
+            ramLogger.logLnf("Updated clientID to %s", p->value().c_str());
+            changedSettingCount++;
+        }
+        if(request->hasParam("deviceTopic", true)){
+            AsyncWebParameter* p = request->getParam("deviceTopic", true);
+            strcpy(settings.mqtt.deviceTopic, p->value().c_str());
+            ramLogger.logLnf("Updated deviceTopic to %s", p->value().c_str());
+            changedSettingCount++;
+        }
+
+        // If any settings were changed, write them back and reboot
+        if(changedSettingCount > 0){
+            RC_t err = writeToSettingsFile(CONFIG_FILENAME, settings);
+            if(RC_SUCCESS != err)
+                ramLogger.logLnf("Failed to write settings file, Error Code=%i", err);
+            else
+                ESP.restart();
+        }
+
+        // Check this parameter last as it will stop code execution after it
         if(request->hasParam("restart", true)){
             // Restart system
             request->send(200);
@@ -96,13 +166,20 @@ void systemEndpointSetup(){
             vTaskDelay(5000 / portTICK_PERIOD_MS);
             ESP.restart();
         }
-        else if(request->args() == 0){
+
+        // Reply
+        if(request->args() == 0){ // no arguments were received
             ramLogger.logLn("Received /api/system POST request without parameters");
             request->send(400, "text/plain", "POST request without parameters");
         }
-        else{
+        else if(changedSettingCount == 0){ 
+            // some arguments were received but no settings updated
+            // due to wrong parameters
             ramLogger.logLn("Invalid POST request parameters");
             request->send(400, "text/plain", "Invalid POST request parameters");
+        }
+        else{
+            request->send(200);
         }
     });
 

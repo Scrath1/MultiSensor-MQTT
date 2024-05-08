@@ -92,6 +92,4 @@ RC_t readKeyValueFloat(char str[], const char key[], float_t& value, bool remove
  */
 RC_t readKeyValueInt(char str[], const char key[], int32_t& value, bool remove = false);
 
-
-
 #endif // HELPER_FUNCTIONS_H

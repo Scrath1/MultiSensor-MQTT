@@ -42,7 +42,7 @@
       <div class="siimple-grid-row" id="config" style="display:none;">
         <div class="siimple-grid-col siimple-grid-col--12">
           <!-- Form content -->
-          <form id="configForm">
+          <form id="configForm" method="post">
             <div class="siimple-form">
               <div class="siimple-form-title">Network settings</div>
               <div class="siimple-form-detail">Configure general network settings.</div>
@@ -105,9 +105,9 @@
                 <!-- Send button -->
                 <div class="siimple-form-field">
                   <input type='button' class='siimple-btn siimple-btn--navy' value="save" name="save"
-                    onclick="writeConfig('save')">
+                    onclick="submitSettingsForm()"/>
                   <input type='button' class='siimple-btn siimple-btn--grey' value="restart the dongle" name="restart"
-                    onclick="writeConfig('restart')">
+                    onclick="restartDevice()"/>
                 </div>
               </div>
           </form>
