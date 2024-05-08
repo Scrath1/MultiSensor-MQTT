@@ -10,6 +10,10 @@
 #include <stdint.h>
 #endif
 
+// Priority with which the main loop runs in respect to other tasks.
+// Higher number => Other tasks preempt the lower number
+#define LOOP_TASK_PRIORITY (1)
+
 // Calculates the size of an array
 #define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0]))
 

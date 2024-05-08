@@ -66,4 +66,14 @@
 // Disabled when not debugging for better performance
 #define ENABLE_WEBSERVER_REQUEST_LOGGING (0)
 
+// MQTT configuration
+// ============================================
+
+// Defines in seconds how long to keep the mqtt connection open when
+// no packages are being sent or received
+#define MQTT_CONNECTION_KEEPALIVE_S 15
+// Defines in which interval incoming messages are processed and the
+// connection to the server is refreshed
+#define MQTT_TASK_CYCLE_TIME_MS (5000) 
+
 #endif // CFG_H

@@ -8,9 +8,7 @@
 #include "global_objects.h"
 #include "helper_functions.h"
 #include "sensors/SensorFactory.h"
-
-WiFiClient espWiFiClient;
-PubSubClient mqttClient(espWiFiClient);
+#include "mqtt.h"
 
 const char *encryptionTypeToString(wifi_auth_mode_t encryptionType) {
     switch (encryptionType) {
@@ -199,12 +197,12 @@ void setup() {
     webserverSetup();
 
     // mqtt setup
-    IPAddress serverIP;
-    serverIP.fromString(settings.mqtt.brokerAddress);
-    ramLogger.logLnf("MQTT broker address: %s", serverIP.toString().c_str());
-    mqttClient.setServer(
-        serverIP,
-        settings.mqtt.brokerPort);
+    // If broker address is 0.0.0.0, don't use MQTT
+    if(strcmp(settings.mqtt.brokerAddress, "0.0.0.0") != 0){
+        if(pdPASS != xTaskCreate(mqttTask, MQTT_TASK_NAME, MQTT_TASK_STACK_SIZE, NULL,   MQTT_TASK_PRIORITY, &mqttTaskHandle)){
+            ramLogger.logLn("Failed to create MQTT task");
+        }
+    }
 
     // Sensor setup
     if(RC_SUCCESS != parseSensorFile(SENSOR_CFG_FILENAME)){
@@ -215,54 +213,32 @@ void setup() {
     }
 }
 
-void reconnect() {
-    // Loop until we're reconnected
-    while (!mqttClient.connected()) {
-        ramLogger.logLnf("Attempting MQTT connection, ID: %s, User: %s",
-            settings.mqtt.clientID, settings.mqtt.username);
-        // Attempt to connect
-        if (mqttClient.connect(
-                settings.mqtt.clientID,
-                settings.mqtt.username,
-                settings.mqtt.password)) {
-            Serial.println("connected");
-        } else {
-            Serial.println(" try again in 5 seconds");
-            // Wait 5 seconds before retrying
-            delay(5000);
-        }
-    }
-}
-
 void loop() {
-    static uint32_t delayCounter = 0;
-    if (!mqttClient.connected()) {
-        reconnect();
-    }
-    mqttClient.loop();
-    delay(1000);
-    if (delayCounter % SENSOR_POLLING_INTERVAL_S == 0) {
-        delayCounter = 0;
-        // publish value
-        for(Sensor* s : sensors){
-            if(s == nullptr) continue;
-            float_t val = s->readSensor();
-            Serial.print(s->getName());
-            Serial.print(": ");
-            Serial.println(val);
-            // If the client is connected, publish the sensor data
-            if(mqttClient.connected()){
-                char topic[256] = "";
-                snprintf(topic, sizeof(topic), "%s/%s/%s",
-                    MQTT_BASE_TOPIC, settings.mqtt.deviceTopic,
-                    s->getName());
-                char valStr[32];
-                snprintf(valStr, sizeof(valStr), "%f", val);
-                mqttClient.publish(topic, valStr);
-            }
+    // stores the last waketime of the loop task
+    static TickType_t lastWakeTime;
+    lastWakeTime = xTaskGetTickCount();
+
+    // publish value
+    for (Sensor *s : sensors) {
+        if (s == nullptr) continue;
+        float_t val = s->readSensor();
+        Serial.print(s->getName());
+        Serial.print(": ");
+        Serial.println(val);
+        // If the mqtt client is connected, publish the sensor data
+        if (mqttClient.connected()) {
+            char topic[256] = "";
+            snprintf(topic, sizeof(topic), "%s/%s/%s",
+                     MQTT_BASE_TOPIC, settings.mqtt.deviceTopic,
+                     s->getName());
+            char valStr[32];
+            snprintf(valStr, sizeof(valStr), "%f", val);
+            mqttClient.publish(topic, valStr);
         }
     }
-    delayCounter++;
+
+    // Sleep task until the next sensor polling time
+    xTaskDelayUntil(&lastWakeTime, pdMS_TO_TICKS(SENSOR_POLLING_INTERVAL_S * 1000));
 }
 
 #endif  // PIO_UNIT_TESTING
