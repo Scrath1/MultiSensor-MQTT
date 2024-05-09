@@ -65,18 +65,22 @@ bool getLogMessagesFromTo(AsyncResponseStream* response, int32_t from, int32_t t
     JsonArray array = doc.to<JsonArray>();
     // Get individual log messages
     for (uint32_t i = std::abs(from); i <= std::abs(to); i++) {
-        char str[RAMLOGGER_MAX_STRING_LENGTH + 1];
-        uint32_t msgNumber = 0;
+        RamLogger<RAMLOGGER_MAX_MESSAGE_COUNT, RAMLOGGER_MAX_STRING_LENGTH, RAMLOGGER_MAX_TIMESTAMP_STR_LEN>::BufferEntry_t bufEntry;
+        RC_t err;
         if (from < 0) {
-            ramLogger.get(static_cast<int32_t>(i) * -1, str, RAMLOGGER_MAX_STRING_LENGTH, msgNumber);
+            // negative indexing. to+i preserves order from oldest to newest
+            bufEntry = ramLogger.get(static_cast<int32_t>(to -1 + i), err);
+            // bufEntry = ramLogger.get(static_cast<int32_t>(i) * -1, err);
         } else {
-            ramLogger.get(static_cast<int32_t>(i), str, RAMLOGGER_MAX_STRING_LENGTH, msgNumber);
+            // positive indexing
+            bufEntry = ramLogger.get(static_cast<int32_t>(i), err);
         }
+        if(RC_SUCCESS != err) continue;
 
         // Create JSON object for each message
         JsonObject obj = array.createNestedObject();
-        obj["msg"] = str;
-        obj["id"] = msgNumber;
+        obj["msg"] = bufEntry.msg;
+        obj["time"] = bufEntry.time;
     }
     serializeJson(array, *response);
     return true;

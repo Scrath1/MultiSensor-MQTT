@@ -40,20 +40,24 @@ function sleep(ms) {
   }
 
 function getEventLog() {
-    var http = new XMLHttpRequest();
+    let http = new XMLHttpRequest();
     http.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {
-            var log = this.responseText;
-            log = log.replace(/(?:\r\n|\r|\n)/g, '<br />');
+            let log = "";
+            let logJson = JSON.parse(this.responseText);
+            for(let i = 0; i < logJson.length; i++){
+                let logEntry = logJson[i];
+                log += logEntry["time"] + ": " + logEntry["msg"] + "<br/>";
+            }
 
             document.getElementById("log").innerHTML = log;
             document.getElementById('spinner').style.display = "none";
             document.getElementById('log').style.display = "block";
         }
     };
-    http.open("POST", "api", true);
+    http.open("GET", "api/log?from=-200&to=-1", true);
     http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-    http.send("cmd=eventlog");
+    http.send();
 }
 
 function getConfig() {

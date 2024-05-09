@@ -75,7 +75,7 @@ void wifiSetup() {
     // Useful for debugging but can cause issues when an SSID has non ASCII that
     // get misinterpreted by the JSON debugger and therefore prevent the printing of logs
     // in the webinterface
-    wifiScan();
+    // wifiScan();
 
     WiFi.softAP(WIFI_AP_NAME);
     WiFi.mode(WIFI_STA);

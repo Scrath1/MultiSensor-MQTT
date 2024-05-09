@@ -21,7 +21,7 @@
 // ram logger before the oldest one is overwritten.
 #define RAMLOGGER_MAX_MESSAGE_COUNT (50)
 // Defines how large the timestamp string is allowed to be in the logger
-#define RAMLOGGER_MAX_TIMESTAMP_STR_LEN (16)
+#define RAMLOGGER_MAX_TIMESTAMP_STR_LEN (32)
 
 
 // Sensor config file
