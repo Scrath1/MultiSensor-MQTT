@@ -7,9 +7,8 @@
 #include "filesystem/DesktopFilesystem.h"
 #endif  // ARDUINO
 
-// global RamLogger object and its buffer
-char ramLoggerBuffer[RAMLOGGER_MAX_STRING_LENGTH * RAMLOGGER_MAX_MESSAGE_COUNT];
-RamLogger ramLogger{ramLoggerBuffer, sizeof(ramLoggerBuffer) / sizeof(ramLoggerBuffer[0]), RAMLOGGER_MAX_MESSAGE_COUNT};
+// global RamLogger object
+RamLogger ramLogger{RAMLOGGER_MAX_MESSAGE_COUNT, RAMLOGGER_MAX_STRING_LENGTH};
 
 #ifdef ARDUINO
 LittleFilesystem lfs;

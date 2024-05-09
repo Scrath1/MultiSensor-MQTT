@@ -14,7 +14,7 @@
 // ============================================
 
 // Configures the maximum length of a log string which can be saved
-// in the ram logger for later access. Does not include the null-terminator.
+// in the ram logger for later access
 // Larger strings will still print to serial but will be cut off in the buffer
 #define RAMLOGGER_MAX_STRING_LENGTH (100)
 // Defines the amount of messages which are buffered in the

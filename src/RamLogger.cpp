@@ -16,21 +16,32 @@
 #define PRINT_LF() std::cout << std::endl
 #endif
 
-RamLogger::RamLogger(char* buf, uint32_t bufLen, uint32_t numItems) : buffer(buf), len(numItems), itemLen(bufLen / numItems) {
-    // Ensure buffer is filled with 0
-    clear();
+RamLogger::RamLogger(uint32_t maxMessages, uint32_t maxMsgLen) : bufferSize(maxMessages), msgLen(maxMsgLen) {
+    buffer = new BufferEntry_t[maxMessages];
+    for(uint32_t i = 0; i < bufferSize; i++){
+        buffer[i].msg = new char[maxMsgLen];
+        buffer[i].msgLen = maxMsgLen;
+        memset(buffer[i].msg, '\0', maxMsgLen);
+    }
 };
 
+RamLogger::~RamLogger(){
+    for(uint32_t i = 0; i < bufferSize; i++){
+        delete[] buffer[i].msg;
+    }
+    delete[] buffer;
+}
+
 bool RamLogger::isEmpty() const {
-    return (head == tail && buffer[tail * itemLen] == 0);
+    return (head == tail && strlen(buffer[tail].msg) == 0);
 }
 
 bool RamLogger::isFull() const {
-    return (head == tail && buffer[tail * itemLen] != 0);
+    return (head == tail && strlen(buffer[tail].msg) != 0);
 }
 
 uint32_t RamLogger::remaining() const {
-    return len - elementsInBuffer;
+    return bufferSize - elementsInBuffer;
 }
 
 uint32_t RamLogger::available() const {
@@ -41,14 +52,13 @@ RC_t RamLogger::log(const char str[]) {
     // If the buffer is not completely filled yet, increment element counter
     if (!isFull()) elementsInBuffer++;
     // Find index of current element in buffer where str will be stored
-    uint32_t startIdx = head * itemLen;
+    uint32_t startIdx = head;
     // if head has caught up to tail, increment tail since the oldest entry will be overwritten now
-    if (head == tail && !isEmpty()) tail = (tail + 1) % (len);
-    head = (head + 1) % (len);
+    if (head == tail && !isEmpty()) tail = (tail + 1) % (bufferSize);
+    head = (head + 1) % (bufferSize);
 
     // copy str and increment msgCounter
-    // strncpy(&(buffer[startIdx]), str, itemLen);
-    memcpy(&(buffer[startIdx]), str, itemLen);
+    strncpy(buffer[startIdx].msg, str, msgLen);
     msgCounter++;
 
     PRINT(str);
@@ -64,13 +74,14 @@ RC_t RamLogger::logf(const char* format, ...) {
 }
 
 RC_t RamLogger::logf(const char* format, va_list args) {
-    char buffer[RAMLOGGER_MAX_STRING_LENGTH + 1];
+    char* buf = new char[msgLen];
     // n contains the number of bits written if buffer is sufficiently large
     // not counting the null-terminator
     // on an encoding error, it receives a negative value
-    int n = vsnprintf(buffer, sizeof(buffer), format, args);
-    RamLogger::log(buffer);
-    if (n < RAMLOGGER_MAX_STRING_LENGTH && n >= 0) {
+    int n = vsnprintf(buf, msgLen, format, args);
+    RamLogger::log(buf);
+    delete[] buf;
+    if (n < msgLen-1 && n >= 0) {
         return RC_SUCCESS;
     }
     return RC_ERROR;
@@ -97,20 +108,20 @@ RC_t RamLogger::get(int32_t idx, char str[], uint32_t strLen) const {
     // e.g. there is 1 element in the buffer,
     // the index may not be 1 or -2
     if (idx >= available() && idx < available() * -1) return RC_ERROR_BAD_PARAM;
-    if (strLen < itemLen) return RC_ERROR_MEMORY;
+    if (strLen < msgLen) return RC_ERROR_MEMORY;
     uint32_t startIdx;
     if (idx < 0) {
         // negative indexing. Starts from newest
         // Calculate the absolute idx
-        idx = (idx + head + len - remaining()) % (len - remaining());
+        idx = (idx + head + bufferSize - remaining()) % (bufferSize - remaining());
         // Get the element start idx based on the absolute idx
-        startIdx = indexToArrayIndex(idx);
+        startIdx = idx;
     } else {
         // positive indexing. Starts from oldest
-        startIdx = indexToArrayIndex(tail + idx);
+        startIdx = tail + idx;
     }
 
-    strncpy(str, (char*)&(buffer[startIdx]), itemLen);
+    strncpy(str, buffer[startIdx].msg, msgLen);
 
     return RC_SUCCESS;
 }
@@ -139,23 +150,18 @@ RC_t RamLogger::pop(char str[], uint32_t strLen) {
     if (RC_SUCCESS == err) {
         elementsInBuffer--;
         // Erase popped element and increment tailcounter
-        uint32_t eraseIdx = indexToArrayIndex(tail);
-        memset(&(buffer[eraseIdx]), 0, itemLen);
-        tail = (tail + 1) % len;
+        memset(buffer[tail].msg, 0, msgLen);
+        tail = (tail + 1) % bufferSize;
     }
     return err;
 }
 
-inline uint32_t RamLogger::indexToArrayIndex(int32_t idx) const {
-    return (idx * itemLen) % (len * itemLen);
-}
-
 uint32_t RamLogger::getMaxMsgLen() const {
-    return itemLen;
+    return msgLen;
 }
 
 uint32_t RamLogger::getMaxNumEntries() const {
-    return len;
+    return bufferSize;
 }
 
 uint32_t RamLogger::getMsgCounter() const {
@@ -163,6 +169,8 @@ uint32_t RamLogger::getMsgCounter() const {
 }
 
 void RamLogger::clear() {
-    memset(buffer, 0, len * itemLen);
+    for(uint32_t i = 0; i < bufferSize; i++){\
+        memset(buffer[i].msg, '\0', msgLen);
+    }
     elementsInBuffer = 0;
 }

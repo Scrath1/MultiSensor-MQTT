@@ -8,7 +8,7 @@
 
 #define NUM_START_ENTRIES 2
 // Length of each entry in RamLogger minus the null terminator
-#define MAX_STRING_LENGTH 5
+#define MAX_STRING_LENGTH 6
 // Number of strings the Ramlogger can hold
 #define MAX_ENTRIES 3
 // Number of test strings available
@@ -24,10 +24,8 @@ class RamLoggerTest : public testing::Test {
      * Make sure non-const objects are part of the test fixture or they wont be
      * reset between each test
      */
-    // Buffer used by the RamLogger
-    char buffer[MAX_STRING_LENGTH * MAX_ENTRIES];
     // Actual RamLogger object
-    RamLogger testLogger{buffer, sizeof(buffer), MAX_ENTRIES};
+    RamLogger testLogger{MAX_ENTRIES, MAX_STRING_LENGTH};
     // Strings used for testing the RamLogger
     const char *testStrings[NUM_TEST_STRINGS];
 
@@ -65,7 +63,7 @@ TEST_F(RamLoggerTest, RemainingSpaceCorrect) {
     ASSERT_EQ(testLogger.remaining(), expectedRemainingEntries);
 
     // Remove oldest entry
-    char tmp[MAX_STRING_LENGTH + 1];
+    char tmp[MAX_STRING_LENGTH];
     testLogger.pop(tmp, MAX_STRING_LENGTH);
     expectedRemainingEntries++;
     ASSERT_EQ(testLogger.remaining(), expectedRemainingEntries);
@@ -82,7 +80,7 @@ TEST_F(RamLoggerTest, msgCounterIncrementTest) {
     uint32_t expectedMsgCounter = NUM_START_ENTRIES;
     EXPECT_EQ(testLogger.getMsgCounter(), expectedMsgCounter);
 
-    char entry[MAX_STRING_LENGTH + 1];
+    char entry[MAX_STRING_LENGTH];
     RC_t err = testLogger.pop(entry, MAX_STRING_LENGTH);
     ASSERT_EQ(err, RC_SUCCESS);
     // Message counter should not change when popping from the buffer
@@ -99,7 +97,7 @@ TEST_F(RamLoggerTest, msgCounterIncrementTest) {
  */
 TEST_F(RamLoggerTest, GetFunctionTest) {
     // Oldest entry after setup should be the first test string
-    char entry[MAX_STRING_LENGTH + 1];
+    char entry[MAX_STRING_LENGTH];
     RC_t err = testLogger.get(0, entry, MAX_STRING_LENGTH);
     ASSERT_EQ(err, RC_SUCCESS);
     EXPECT_STREQ(entry, testStrings[0]);
@@ -125,7 +123,7 @@ TEST_F(RamLoggerTest, GetFunctionTest) {
     err = testLogger.get(0, entry, MAX_STRING_LENGTH);
     EXPECT_EQ(err, RC_ERROR_BUFFER_EMPTY);
 
-    // try retrieving non-existent indexes
+    // // try retrieving non-existent indexes
     err = testLogger.logLn("foo");
     ASSERT_EQ(err, RC_SUCCESS);
     err = testLogger.get(-2, entry, MAX_STRING_LENGTH);
@@ -138,7 +136,7 @@ TEST_F(RamLoggerTest, GetFunctionTest) {
  * @brief Tests the correct calculation of each messages number
  */
 TEST_F(RamLoggerTest, GetWithMsgNumberTest) {
-    char entry[MAX_STRING_LENGTH + 1];
+    char entry[MAX_STRING_LENGTH];
     uint32_t msgId = 0;
 
     // First with negative indexing
@@ -197,15 +195,18 @@ TEST_F(RamLoggerTest, RingbufferingTest) {
 TEST_F(RamLoggerTest, FormattedLogTest) {
     const uint32_t maxStringLength = 64;
     const uint32_t maxEntries = 3;
-    char buffer[maxStringLength * maxEntries];
-    RamLogger localTestLogger{buffer, sizeof(buffer), maxEntries};
+    RamLogger localTestLogger{maxEntries, maxStringLength};
+    ASSERT_EQ(maxStringLength, localTestLogger.getMaxMsgLen());
+    ASSERT_EQ(maxEntries, localTestLogger.getMaxNumEntries());
 
     // check with logf
-    char expected[maxStringLength + 1];
+    char expected[maxStringLength];
     snprintf(expected, sizeof(expected), "Literally %u", 1984);
-    char result[maxStringLength + 1];
-    localTestLogger.logf("Literally %u", 1984);
-    localTestLogger.get(-1, result, maxStringLength);
+    char result[maxStringLength];
+    RC_t err = localTestLogger.logf("Literally %u", 1984);
+    ASSERT_EQ(RC_SUCCESS, err);
+    err = localTestLogger.get(-1, result, sizeof(result));
+    ASSERT_EQ(RC_SUCCESS, err);
     EXPECT_STREQ(result, expected);
 
     // check with logLnf
