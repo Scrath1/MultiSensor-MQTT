@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <PubSubClient.h>
 #include <WiFi.h>
+#include <NTPClient.h>
 
 #include <vector>
 
@@ -9,6 +10,9 @@
 #include "mqtt.h"
 #include "sensors/SensorFactory.h"
 #include "webserver/webserver.h"
+
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP);
 
 const char *encryptionTypeToString(wifi_auth_mode_t encryptionType) {
     switch (encryptionType) {
@@ -54,6 +58,16 @@ uint32_t wifiScan() {
     }
     WiFi.scanDelete();
     return n;
+}
+
+void getTimestamp(char str[RAMLOGGER_MAX_TIMESTAMP_STR_LEN]){
+    if(!timeClient.update()) timeClient.forceUpdate();
+    String formattedTime = timeClient.getFormattedTime();
+    snprintf(str, RAMLOGGER_MAX_TIMESTAMP_STR_LEN, "%s UTC", formattedTime);
+}
+
+void ramLoggerPrintFunction(const char str[]){
+    Serial.print(str);
 }
 
 void wifiSetup() {
@@ -159,6 +173,7 @@ void setup() {
     Serial.begin(115200);
     // Wait after flashing/boot to allow terminal to connect
     sys_delay_ms(2000);
+    ramLogger.setPrintFunction(ramLoggerPrintFunction);
     // put your setup code here, to run once:
     ramLogger.logLn("MultiSensor-MQTT");
     if (filesystem->isInitialized())
@@ -194,6 +209,10 @@ void setup() {
 
     wifiSetup();
     webserverSetup();
+
+    // start timeclient
+    timeClient.begin();
+    ramLogger.setTimestampFunction(getTimestamp);
 
     // mqtt setup
     // If broker address is 0.0.0.0, don't use MQTT

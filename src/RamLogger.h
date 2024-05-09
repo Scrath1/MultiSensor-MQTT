@@ -5,28 +5,33 @@
 #ifndef RAMLOGGER_H
 #define RAMLOGGER_H
 
-#if defined(ARDUINO)
-#include <Arduino.h>
-#else
 #include <cstdint>
-#endif
 #include <cstdarg>
-
+#include <functional>
 #include "global.h"
 
+template<uint32_t maxNumberOfMessages, uint32_t maxMessageLength, uint32_t maxTimestampStrLength>
 class RamLogger{
 public:
     /**
-     * @brief Constructs an RamLogger object
-     * @param maxMessages [IN] Defines how many messages the buffer can store
-     * @param maxMsgLen [IN] Defines how long each message can be at most, including null-terminator
+     * @brief Item stored in RamLogger buffer
      */
-    RamLogger(uint32_t maxMessages, uint32_t maxMsgLen);
+    struct BufferEntry_t{
+        const uint32_t msgLen = maxMessageLength; /**<@brief Denotes maximum size of msg string */
+        char msg[maxMessageLength] = ""; /**<@brief Log message */
+        char time[maxTimestampStrLength] = "";
+
+        BufferEntry_t& operator=(const BufferEntry_t& other) {
+            strncpy(this->msg, other.msg, maxMessageLength);
+            strncpy(this->time, other.time, maxTimestampStrLength);
+            return *this;
+        }
+    };
 
     /**
-     * @brief Destructor
+     * @brief Constructs an RamLogger object
      */
-    ~RamLogger();
+    RamLogger() = default;
 
     /**
      * @brief Checks whether anything has been saved in the logger
@@ -63,7 +68,7 @@ public:
 
     /**
      * @brief Similar to log function but allows formatting like in printf
-     * 
+     *
      * @param format [IN] Format string
      * @param ... [IN] Additional parameters as required by the format string
      * @return RC_t RC_SUCCESS on success, RC_ERROR if the formatting failed
@@ -73,7 +78,7 @@ public:
 
     /**
      * @brief Similar to log function but allows formatting like in printf
-     * 
+     *
      * @param format [IN] Format string
      * @param args [IN] Additional parameters as required by the format string
      * @return RC_t RC_SUCCESS on success, RC_ERROR if the formatting failed
@@ -90,7 +95,7 @@ public:
 
     /**
      * @brief Similar to logLn but allows formatting like in printf
-     * 
+     *
      * @param format [IN] Format string
      * @param ... [IN] Additional parameters as required by the format string
      * @return RC_t Same as in logf
@@ -123,6 +128,16 @@ public:
      * RC_SUCCESS on success
      */
     RC_t get(int32_t idx, char str[], uint32_t strLen, uint32_t& msgId) const;
+
+    /**
+     * @brief Returns a reference to the buffer entry at the given index
+     *
+     * @param idx [IN]index of element. Can be indexed with positive or negative values.
+     * 0 is equivalent to the oldest element. -1 to the newest.
+     * @param err [OUT] Output parameter to store error information in.
+     * @return
+     */
+    const BufferEntry_t& get(int32_t idx, RC_t& err) const;
 
     /**
      * @brief Returns the maximum length of a single message, excluding the null terminator
@@ -158,21 +173,73 @@ public:
      * @brief Clears the entire buffer
     */
     void clear();
+
+    /**
+     * @brief Sets the function which the RamLogger can call
+     * to get a timestamp string. The function needs to accept
+     * a char array in which the formatted string is stored
+     * and a uint32_t which denotes the maximum size of the char array
+     * including the null-terminator.
+     *
+     * @param func [IN] Function with the signature "void func(char[], uint32_t)"
+     * @return RC_t RC_SUCCESS on success,
+     *  RC_ERROR_NULL if func is a nullpointer
+     */
+    RC_t setTimestampFunction(std::function<void(char[maxTimestampStrLength])> func);
+
+    /**
+     * @brief Overwrites the default print function of the RamLogger,
+     * which uses printf, with a custom user defined function
+     * @param func [IN] Function for printing to terminal/serial.
+     * Has to return void and accept a const char[] as parameter.
+     */
+    inline void setPrintFunction(std::function<void(const char[])> func){
+        if(func != nullptr) printFunction = func;
+    }
+
+    /**
+     * @brief Resets the overwritten print function back to the default
+     */
+    inline void resetPrintFunction(){
+        printFunction = defaultPrintFunction;
+    }
+
 private:
     /**
-     * @brief Item stored in RamLogger buffer
-     * 
+     * @brief Default function used for printing by RamLogger.
+     * Can be changed using setPrintFunction(...) if printf
+     * is not available
+     *
+     * @param str [IN] string to print
      */
-    typedef struct{
-        uint32_t msgLen; /**<@brief Denotes maximum size of msg string */
-        char* msg; /**<@brief Log message */
-    } BufferEntry_t;
+    static void defaultPrintFunction(const char str[]){
+        printf(str);
+    }
+
+    /**
+     * @brief Converts an index to its actual buffer position.
+     * Required because indices can be negative to indicate
+     * reverse order
+     * idx 0 => oldest msg
+     * idx -1 => newest msg
+     *
+     * @param idx [IN] Index
+     * @return uint32_t
+     */
+    uint32_t index(int32_t idx) const;
+    /**
+     * @brief Wrapper around timestampFunction member variable
+     * which first checks whether the function is valid.
+     *
+     * @param str [OUT] Array in which the timestamp string is stored
+     */
+    void getTimestamp(char str[maxTimestampStrLength]);
     // Array for storing log messages
-    BufferEntry_t* buffer;
+    BufferEntry_t buffer[maxNumberOfMessages];
     // number of items the buffer can hold
-    const uint32_t bufferSize;
+    const uint32_t bufferSize = maxNumberOfMessages;
     // length of individual items, including the null terminator
-    const uint32_t msgLen;
+    const uint32_t msgLen = maxMessageLength;
     // Position of newest entry+1
     volatile uint32_t head = 0;
     // Position of oldest entry, aka the offset beginning of the array
@@ -181,8 +248,18 @@ private:
     uint32_t msgCounter = 0;
     // elements currently stored in buffer. Maxes out at len
     uint32_t elementsInBuffer = 0;
+    // Function which can be called to get a timestamp string.
+    // May be a nullptr if not set by user with setTimestampFunction
+    std::function<void(char[maxTimestampStrLength])> timestampFunction;
+    /**
+     * @brief Function which is called to print something to the terminal.
+     * Defaults function simply uses printf, if that does not work for
+     * your platform you can implement your own function and set it using
+     * setPrintFunction(...)
+     */
+    std::function<void(const char[])> printFunction = defaultPrintFunction;
 };
 
-
+#include "RamLogger.tpp"
 
 #endif //RAMLOGGER_H

@@ -10,7 +10,7 @@
 #include "sensors/Sensor.h"
 #include "settings.h"
 
-extern RamLogger ramLogger;
+extern RamLogger<RAMLOGGER_MAX_MESSAGE_COUNT, RAMLOGGER_MAX_STRING_LENGTH, RAMLOGGER_MAX_TIMESTAMP_STR_LEN> ramLogger;
 extern Filesystem* const filesystem;
 extern std::vector<Sensor*> sensors;
 extern settings_t settings;

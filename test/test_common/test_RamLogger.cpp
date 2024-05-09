@@ -14,6 +14,8 @@
 // Number of test strings available
 #define NUM_TEST_STRINGS 7
 
+#define TIMESTAMP_STR_LEN 32
+
 #if (NUM_START_ENTRIES >= MAX_ENTRIES)
 #error Number of start entries in the buffer should be less than maximum
 #endif
@@ -25,7 +27,7 @@ class RamLoggerTest : public testing::Test {
      * reset between each test
      */
     // Actual RamLogger object
-    RamLogger testLogger{MAX_ENTRIES, MAX_STRING_LENGTH};
+    RamLogger<MAX_ENTRIES, MAX_STRING_LENGTH, TIMESTAMP_STR_LEN> testLogger;
     // Strings used for testing the RamLogger
     const char *testStrings[NUM_TEST_STRINGS];
 
@@ -123,7 +125,7 @@ TEST_F(RamLoggerTest, GetFunctionTest) {
     err = testLogger.get(0, entry, MAX_STRING_LENGTH);
     EXPECT_EQ(err, RC_ERROR_BUFFER_EMPTY);
 
-    // // try retrieving non-existent indexes
+    // try retrieving non-existent indexes
     err = testLogger.logLn("foo");
     ASSERT_EQ(err, RC_SUCCESS);
     err = testLogger.get(-2, entry, MAX_STRING_LENGTH);
@@ -195,7 +197,7 @@ TEST_F(RamLoggerTest, RingbufferingTest) {
 TEST_F(RamLoggerTest, FormattedLogTest) {
     const uint32_t maxStringLength = 64;
     const uint32_t maxEntries = 3;
-    RamLogger localTestLogger{maxEntries, maxStringLength};
+    RamLogger<maxEntries, maxStringLength, TIMESTAMP_STR_LEN> localTestLogger;
     ASSERT_EQ(maxStringLength, localTestLogger.getMaxMsgLen());
     ASSERT_EQ(maxEntries, localTestLogger.getMaxNumEntries());
 
@@ -210,9 +212,9 @@ TEST_F(RamLoggerTest, FormattedLogTest) {
     EXPECT_STREQ(result, expected);
 
     // check with logLnf
-    // memset(result, 0, strlen(result));
-    // snprintf(expected, sizeof(expected), "foo %u", 1984);
-    // localTestLogger.logLnf("foo %u", 1984);
-    // localTestLogger.get(-1, result, maxStringLength);
-    // EXPECT_STREQ(result, expected);
+    memset(result, 0, strlen(result));
+    snprintf(expected, sizeof(expected), "foo %u", 1984);
+    localTestLogger.logLnf("foo %u", 1984);
+    localTestLogger.get(-1, result, maxStringLength);
+    EXPECT_STREQ(result, expected);
 }
