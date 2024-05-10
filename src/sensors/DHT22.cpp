@@ -22,5 +22,11 @@ float_t DHT22::readSensorRaw(){
         default:
             break;
     }
-    return (isnan(val) ? 0: val);
+    if(isnan(val)){
+        return m_lastValidValue;
+    }
+    else{
+        m_lastValidValue = val;
+        return val;
+    }
 }

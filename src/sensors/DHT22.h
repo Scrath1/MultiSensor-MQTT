@@ -35,6 +35,7 @@ class DHT22 : public Sensor{
 
     const Type m_type;
     DHT_Unified m_dht;
+    float_t m_lastValidValue = 0;
 };
 
 #endif // DHT22_H
