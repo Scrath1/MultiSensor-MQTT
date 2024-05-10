@@ -77,8 +77,8 @@ void wifiSetup() {
     // in the webinterface
     // wifiScan();
 
-    WiFi.softAP(WIFI_AP_NAME);
     WiFi.mode(WIFI_STA);
+    WiFi.setHostname(settings.wifi.hostname);
     WiFi.begin(settings.wifi.ssid, settings.wifi.password);
     if (WL_CONNECTED != WiFi.waitForConnectResult(WIFI_CONNECTION_TIMEOUT_MS)) {
         // WiFi setup failed
@@ -191,9 +191,13 @@ void setup() {
 
     // if there was no clientID specified, generate one
     if (strlen(settings.mqtt.clientID) == 0)
-        snprintf(settings.mqtt.clientID, 48, "MultiSensor-MQTT-%llX", ESP.getEfuseMac());
+        snprintf(settings.mqtt.clientID, 64, "MultiSensor-MQTT-%llX", ESP.getEfuseMac());
+    // Same for the device topic
     if (strlen(settings.mqtt.deviceTopic) == 0)
-        snprintf(settings.mqtt.clientID, 16, "%llX", ESP.getEfuseMac());
+        snprintf(settings.mqtt.deviceTopic, 64, "%llX", ESP.getEfuseMac());
+    // And Hostname
+    if (strlen(settings.wifi.hostname) == 0)
+        snprintf(settings.wifi.hostname, 64, "MultiSensor-MQTT-%llX", ESP.getEfuseMac());
 
     // Preferences initialization
     preferences.begin("MultiSensor", false);

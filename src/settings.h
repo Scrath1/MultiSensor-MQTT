@@ -6,6 +6,7 @@ typedef struct {
     struct {
         char ssid[64] = "";
         char password[64] = "";
+        char hostname[64] = "";
     } wifi;
     struct {
         /**

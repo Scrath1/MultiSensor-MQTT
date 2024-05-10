@@ -81,6 +81,7 @@ function getConfig() {
             document.getElementById('config').style.display = "block";
             let jsonData = JSON.parse(this.responseText);
             document.getElementById("ssid").value = jsonData["ssid"];
+            document.getElementById("hostname").value = jsonData["hostname"];
             document.getElementById("mqtt_broker_address").value = jsonData["brokerAddress"];
             document.getElementById("mqtt_broker_port").value = jsonData["brokerPort"];
             document.getElementById("mqtt_broker_username").value = jsonData["username"];
@@ -100,7 +101,8 @@ function submitSettingsForm() {
         bodyContent += "wifiPassword=" + wifiPassword;
     }
 
-    bodyContent += "&brokerAddress=" + document.getElementById("mqtt_broker_address").value
+    bodyContent += "&hostname=" + document.getElementById("hostname").value
+        + "&brokerAddress=" + document.getElementById("mqtt_broker_address").value
         + "&brokerPort=" + document.getElementById("mqtt_broker_port").value
         + "&username=" + document.getElementById("mqtt_broker_username").value
         + "&mqttPassword=" + document.getElementById("mqtt_broker_password").value

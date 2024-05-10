@@ -39,6 +39,11 @@ RC_t parseSettingsFile(const char filename[], settings_t &settingsObject) {
         memset(value, '\0', sizeof(value));
 
         parseErr = readKeyValue(reinterpret_cast<char *>(data),
+                                     "WIFI_Hostname", value, sizeof(value));
+        if (parseErr == RC_SUCCESS) strcpy(settingsObject.wifi.hostname, value);
+        memset(value, '\0', sizeof(value));
+
+        parseErr = readKeyValue(reinterpret_cast<char *>(data),
                                 "MQTT_Broker_Address", value, sizeof(value));
         if (parseErr == RC_SUCCESS) strcpy(settingsObject.mqtt.brokerAddress, value);
         memset(value, '\0', sizeof(value));
@@ -75,9 +80,13 @@ RC_t writeToSettingsFile(const char filename[], const settings_t &settingsObject
     RC_t err = filesystem->openFile(filename, Filesystem::WRITE_TRUNCATE);
     if (err != RC_SUCCESS) return err;
 
-    char line[512] = "";
+    char line[256] = "";
     int32_t usedChars = snprintf(line, sizeof(line), "WIFI_SSID: %s\n",
                                  settingsObject.wifi.ssid);
+    if (RC_SUCCESS != filesystem->write((uint8_t *)line, usedChars))
+        return RC_ERROR_WRITE_FAILS;
+    usedChars = snprintf(line, sizeof(line), "WIFI_Hostname: %s\n",
+                                 settingsObject.wifi.hostname);
     if (RC_SUCCESS != filesystem->write((uint8_t *)line, usedChars))
         return RC_ERROR_WRITE_FAILS;
     usedChars = snprintf(line, sizeof(line), "MQTT_Broker_Address: %s\n",

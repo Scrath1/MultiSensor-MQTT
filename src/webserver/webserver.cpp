@@ -104,6 +104,12 @@ void systemEndpointSetup() {
             ramLogger.logLn("Updated WiFi password");
             changedSettingCount++;
         }
+        if (request->hasParam("hostname", true)) {
+            AsyncWebParameter* p = request->getParam("hostname", true);
+            strcpy(settings.wifi.hostname, p->value().c_str());
+            ramLogger.logLnf("Updated hostname to %s", p->value().c_str());
+            changedSettingCount++;
+        }
         if (request->hasParam("brokerAddress", true)) {
             AsyncWebParameter* p = request->getParam("brokerAddress", true);
             strcpy(settings.mqtt.brokerAddress, p->value().c_str());

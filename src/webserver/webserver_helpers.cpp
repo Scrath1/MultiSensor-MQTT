@@ -139,6 +139,7 @@ void getConfig(AsyncResponseStream* response) {
     JsonObject root = doc.to<JsonObject>();
 
     root["ssid"] = settings.wifi.ssid;
+    root["hostname"] = settings.wifi.hostname;
     root["brokerAddress"] = settings.mqtt.brokerAddress;
     root["brokerPort"] = settings.mqtt.brokerPort;
     root["username"] = settings.mqtt.username;
