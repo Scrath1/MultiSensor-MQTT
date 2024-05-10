@@ -11,6 +11,7 @@
 #include "ADCSensor.h"
 #include "BooleanSensor.h"
 #include "RandomSensor.h"
+#include "DHT22.h"
 
 class SensorFactory {
    private:
@@ -187,6 +188,29 @@ class SensorFactory {
         return createBooleanSensor(name, pin, mode, transformer);
     }
 
+    static Sensor* createDHT22FromStr(char configStr[]) {
+        char name[SENSOR_NAME_MAX_LENGTH] = "";
+        RC_t err = readKeyValue(configStr, "name", name, SENSOR_NAME_MAX_LENGTH, true);
+        if (err != RC_SUCCESS) return nullptr;
+
+        int32_t pin = 0;
+        err = readKeyValueInt(configStr, "pin", pin, true);
+        if (RC_SUCCESS != err) return nullptr;
+
+        char type[32];
+        err = readKeyValue(configStr, "type", type, 32, true);
+        if (RC_SUCCESS != err) return nullptr;
+        // convert type string to lowercase
+        for(char& c : type) c = tolower(c);
+        DHT22::Type t;
+        if(strncmp("temperature", type, 32) == 0) t = DHT22::TEMPERATURE;
+        else if (strncmp("humidity", type, 32) == 0) t = DHT22::HUMIDITY;
+        else return nullptr;
+
+        std::shared_ptr<Transformer> transformer = parseTransformerChainFromConfigStr(configStr);
+        return createDHT22(name, pin, t, transformer);
+    }
+
    public:
     /**
      * @brief Creates a dynamically allocated ADCSensor object
@@ -225,6 +249,12 @@ class SensorFactory {
         return new RandomSensor(name, lowerBound, upperBound, transformer);
     }
 
+    static Sensor* createDHT22(char name[], uint32_t pin, DHT22::Type type,
+        std::shared_ptr<Transformer> transformer = nullptr){
+            typedef class DHT22 _DHT22;
+            return new _DHT22{name, pin, type, transformer};
+        }
+
     /**
      * @brief Calls the appropriate Transformer creation function based on the given transformerType string.
      * The string should match the class name of the wanted Transformer implementation.
@@ -262,6 +292,8 @@ class SensorFactory {
             return createADCSensorFromStr(configStr);
         } else if (strcmp(sensorType, "BooleanSensor") == 0) {
             return createBooleanSensorFromStr(configStr);
+        } else if (strcmp(sensorType, "DHT22") == 0) {
+            return createDHT22FromStr(configStr);
         } else
             return nullptr;
     }
