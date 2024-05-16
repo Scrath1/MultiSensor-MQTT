@@ -4,6 +4,7 @@
 #include <NTPClient.h>
 
 #include <vector>
+#include <freertos/task.h>
 
 #include "global_objects.h"
 #include "helper_functions.h"
@@ -11,8 +12,19 @@
 #include "sensors/SensorFactory.h"
 #include "webserver/webserver.h"
 
+// Timer 0 used for automatic periodic reboot
+#define TIMER0_PRESCALER (5120)
+#define TIMER0_TICKS_PER_SECOND (APB_CLK_FREQ / TIMER0_PRESCALER)
+#define TIMER0_TICKS (AUTO_REBOOT_INTERVAL_S * TIMER0_TICKS_PER_SECOND)
+#if (TIMER0_TICKS > INT32_MAX)
+#error "Automatic reboot duration too long. Increase timer prescaler or decrease reboot time"
+#endif
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP);
+// Timer 0 used for automatic periodic reboot
+hw_timer_t *timer0_Cfg = NULL;
+bool rebootFlag = false;
+static TaskHandle_t loopTaskHandle = NULL;
 
 const char *encryptionTypeToString(wifi_auth_mode_t encryptionType) {
     switch (encryptionType) {
@@ -167,6 +179,16 @@ RC_t parseSensorFile(const char filename[]) {
     return err;
 }
 
+/**
+ * @brief Used to trigger periodic automatic reboot using timer 0
+ */
+void IRAM_ATTR timer0_ISR(){
+    rebootFlag = true;
+    if(loopTaskHandle != NULL){
+        vTaskResume(loopTaskHandle);
+    }
+}
+
 #ifndef PIO_UNIT_TESTING
 
 void setup() {
@@ -232,12 +254,30 @@ void setup() {
     } else {
         ramLogger.logLn("Successfully parsed sensor config file");
     }
+
+    // Auto reboot
+    // ESP32C3 has 2 54-bit hardware timers with 16-bit pre-scalers
+    timer0_Cfg = timerBegin(0, TIMER0_PRESCALER, true);
+    timerAttachInterrupt(timer0_Cfg, timer0_ISR, true);
+    timerAlarmWrite(timer0_Cfg, TIMER0_TICKS, false);
+    ramLogger.logLn("Started auto-reboot timer");
+    timerAlarmEnable(timer0_Cfg);
 }
 
 void loop() {
+    if(loopTaskHandle == NULL){
+        loopTaskHandle = xTaskGetCurrentTaskHandle();
+    }
+
     // stores the last waketime of the loop task
     static TickType_t lastWakeTime;
     lastWakeTime = xTaskGetTickCount();
+
+    if(rebootFlag){
+        ramLogger.logLn("Automatic reboot triggered");
+        delay(1000);
+        ESP.restart();
+    }
 
     // publish value
     for (Sensor *s : sensors) {

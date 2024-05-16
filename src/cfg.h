@@ -59,6 +59,9 @@
 // LittleFS requires absolute file paths.
 #define CONFIG_FILENAME "/config.txt"
 
+// Time after which the controller automatically reboots in seconds
+#define AUTO_REBOOT_INTERVAL_S (86400)
+
 // Webserver configuration
 // ============================================
 
