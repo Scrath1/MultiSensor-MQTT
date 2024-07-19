@@ -330,17 +330,29 @@ void loop() {
     for (Sensor *s : sensors) {
         if (s == nullptr) continue;
         float_t val = s->readSensor();
+        float_t rawVal = s->readSensorRaw();
         Serial.print(s->getName());
         Serial.print(": ");
-        Serial.println(val);
+        Serial.print(val);
+        Serial.print(", raw: ");
+        Serial.println(rawVal);
         // If the mqtt client is connected, publish the sensor data
         if (mqttClient.connected()) {
             char topic[256] = "";
+            char valStr[32] = "";
+
+            // publish processed value
             snprintf(topic, sizeof(topic), "%s/%s/%s",
                      MQTT_BASE_TOPIC, settings.mqtt.deviceTopic,
                      s->getName());
-            char valStr[32];
             snprintf(valStr, sizeof(valStr), "%f", val);
+            mqttClient.publish(topic, valStr);
+
+            // publish raw value under subtopic
+            snprintf(topic, sizeof(topic), "%s/%s/raw/%s",
+                     MQTT_BASE_TOPIC, settings.mqtt.deviceTopic,
+                     s->getName());
+            snprintf(valStr, sizeof(valStr), "%f", rawVal);
             mqttClient.publish(topic, valStr);
         }
     }

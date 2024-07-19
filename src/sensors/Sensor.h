@@ -37,6 +37,15 @@ class Sensor {
     float_t readSensor();
 
     /**
+     * @brief Returns a raw reading of the given sensor without any filtering
+     * or processing.
+     * This function has to be implemented by derived classes for them to work
+     *
+     * @return float_t
+     */
+    virtual float_t readSensorRaw() = 0;
+
+    /**
      * @brief Returns the name assigned to this sensor
      *
      * @return const char*
@@ -68,15 +77,6 @@ class Sensor {
      *
      */
     char m_sensorName[SENSOR_NAME_MAX_LENGTH] = "";
-
-    /**
-     * @brief Returns a raw reading of the given sensor without any filtering
-     * or processing.
-     * This function has to be implemented by derived classes for them to work
-     *
-     * @return float_t
-     */
-    virtual float_t readSensorRaw() = 0;
 };
 
 #endif  // SENSOR_H
