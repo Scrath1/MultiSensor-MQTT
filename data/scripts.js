@@ -104,9 +104,12 @@ function submitSettingsForm() {
     bodyContent += "&hostname=" + document.getElementById("hostname").value
         + "&brokerAddress=" + document.getElementById("mqtt_broker_address").value
         + "&brokerPort=" + document.getElementById("mqtt_broker_port").value
-        + "&username=" + document.getElementById("mqtt_broker_username").value
-        + "&mqttPassword=" + document.getElementById("mqtt_broker_password").value
-        + "&clientID=" + document.getElementById("mqtt_broker_client_id").value
+        + "&username=" + document.getElementById("mqtt_broker_username").value;
+    let mqttPassword = document.getElementById("mqtt_broker_password").value
+    if(mqttPassword != ""){
+        bodyContent += "&mqttPassword=" + mqttPassword;
+    }
+    bodyContent += "&clientID=" + document.getElementById("mqtt_broker_client_id").value
         + "&deviceTopic=" + document.getElementById("mqtt_devicetopic").value;
     if(sensorConfigChangedFlag){
         bodyContent += "&sensorConfig=" + document.getElementById("sensor_config").value;

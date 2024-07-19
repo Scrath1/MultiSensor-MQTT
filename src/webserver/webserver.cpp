@@ -4,6 +4,7 @@
 #include <ESPAsyncWebServer.h>
 #include <LittleFS.h>
 #include <WiFi.h>
+#include "esp_task_wdt.h"
 
 #include "cfg.h"
 #include "filesystem/Filesystem.h"
@@ -90,12 +91,6 @@ void systemEndpointSetup() {
             ramLogger.logLnf("Updated SSID to %s", p->value().c_str());
             changedSettingCount++;
         }
-        if (request->hasParam("ssid", true)) {
-            AsyncWebParameter* p = request->getParam("ssid", true);
-            strcpy(settings.wifi.ssid, p->value().c_str());
-            ramLogger.logLnf("Updated SSID to %s", p->value().c_str());
-            changedSettingCount++;
-        }
         if (request->hasParam("wifiPassword", true)) {
             AsyncWebParameter* p = request->getParam("wifiPassword", true);
             strcpy(settings.wifi.password, p->value().c_str());
@@ -159,6 +154,10 @@ void systemEndpointSetup() {
                 const char* text = p->value().c_str();
                 // listAllParams(request);
                 const uint32_t textLen = strlen(text);
+                // manually feed watchdog before writing to file
+                // as this operation running to long could otherwise force
+                // a reboot
+                esp_task_wdt_reset();
                 filesystem->write((uint8_t*)text, textLen);
                 filesystem->closeFile();
                 ramLogger.logLnf("Updated sensor settings file (%u characters written)", textLen);
@@ -174,7 +173,8 @@ void systemEndpointSetup() {
                 ramLogger.logLnf("Failed to write settings file, Error Code=%i", err);
             else {
                 // Short delay to finish printing potential debug messages
-                ramLogger.logLn("Restarting system in 3 seconds");
+                ramLogger.logLnf("%u settings changed. Restarting system in 3 seconds", 
+                    changedSettingCount);
                 delay(3000);
                 ESP.restart();
             }
