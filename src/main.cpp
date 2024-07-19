@@ -228,6 +228,48 @@ void setup() {
     else
         ramLogger.logLn("Successfully parsed config file");
 
+    // Preferences initialization
+    // Passwords are not stored in the settings file.
+    // If any are found during the first startup, they are moved to the
+    // less easily readable Preference storage.
+    preferences.begin("MultiSensor", false);
+
+    // These initializations are only run once.
+    // Unless the flash is fully erased, data stored in preferences can persist
+    // through flashing of programs and filesystem images
+    if (!preferences.isKey("WIFI_Password"))
+        preferences.putString("WIFI_Password", "");
+    if (!preferences.isKey("MQTT_Password"))
+        preferences.putString("MQTT_Password", "");
+
+    // Read passwords from preferences
+    // If no password was found in the settings file, the password strings
+    // should be empty at this point (meaning they have length 1 due to \0 byte)
+    char tmp[sizeof(settings.wifi.password)] = "";
+    preferences.getString("WIFI_Password", tmp, sizeof(tmp));
+    if(strcmp(tmp, settings.wifi.password) != 0 && strlen(settings.wifi.password) > 1){
+        // string stored in preference storage does not match password found in config file
+        // => Update value stored in flash
+        preferences.putString("WIFI_Password", settings.wifi.password);
+    }
+    else{
+        // No password initialization through config file.
+        // => Copy password from preferences to wifi password variable
+        strcpy(settings.wifi.password, tmp);
+    }
+
+    preferences.getString("MQTT_Password", tmp, sizeof(tmp));
+    if(strcmp(tmp, settings.mqtt.password) != 0 && strlen(settings.mqtt.password) > 1){
+        // string stored in preference storage does not match password found in config file
+        // => Update value stored in flash
+        preferences.putString("MQTT_Password", settings.mqtt.password);
+    }
+    else{
+        // No password initialization through config file.
+        // => Copy password from preferences to mqtt password variable
+        strcpy(settings.mqtt.password, tmp);
+    }
+
     // if there was no clientID specified, generate one
     if (strlen(settings.mqtt.clientID) == 0)
         snprintf(settings.mqtt.clientID, 64, "MultiSensor-MQTT-%llX", ESP.getEfuseMac());
@@ -237,18 +279,6 @@ void setup() {
     // And Hostname
     if (strlen(settings.wifi.hostname) == 0)
         snprintf(settings.wifi.hostname, 64, "MultiSensor-MQTT-%llX", ESP.getEfuseMac());
-
-    // Preferences initialization
-    preferences.begin("MultiSensor", false);
-    if (!preferences.isKey("WIFI_Password"))
-        preferences.putString("WIFI_Password", "PlaceholderPassword");
-    if (!preferences.isKey("MQTT_Password"))
-        preferences.putString("MQTT_Password", "PlaceholderPassword");
-    // Read passwords from preferences
-    preferences.getString("WIFI_Password", settings.wifi.password,
-                          sizeof(settings.wifi.password));
-    preferences.getString("MQTT_Password", settings.mqtt.password,
-                          sizeof(settings.mqtt.password));
 
     wifiSetup();
     webserverSetup();
