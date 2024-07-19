@@ -59,12 +59,12 @@ const char *encryptionTypeToString(wifi_auth_mode_t encryptionType) {
 uint32_t wifiScan() {
     const uint32_t n = WiFi.scanNetworks();
     if (0 == n) {
-        ramLogger.logLn("No networks found");
+        Serial.println("No networks found");
     } else {
-        ramLogger.logLnf("%2u networks found. Listing up to 5 strongest", n);
-        ramLogger.logLn("Nr | SSID                             | RSSI | CH | Encryption");
+        Serial.printf("%2u networks found. Listing up to 5 strongest\n", n);
+        Serial.println("Nr | SSID                             | RSSI | CH | Encryption");
         for (uint32_t i = 0; i < n && i < 5; i++) {
-            ramLogger.logLnf("%2u | %-32.32s | %4d | %2d | %s", i + 1, WiFi.SSID(i), WiFi.RSSI(i),
+            Serial.printf("%2u | %-32.32s | %4d | %2d | %s\n", i + 1, WiFi.SSID(i), WiFi.RSSI(i),
                              WiFi.channel(i), encryptionTypeToString(WiFi.encryptionType(i)));
         }
     }
@@ -84,10 +84,7 @@ void ramLoggerPrintFunction(const char str[]){
 
 void wifiSetup() {
     ramLogger.logLn("Setting up WiFi");
-    // Useful for debugging but can cause issues when an SSID has non ASCII that
-    // get misinterpreted by the JSON debugger and therefore prevent the printing of logs
-    // in the webinterface
-    // wifiScan();
+    wifiScan();
 
     WiFi.mode(WIFI_STA);
     WiFi.setHostname(settings.wifi.hostname);
