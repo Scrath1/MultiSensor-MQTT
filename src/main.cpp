@@ -89,14 +89,34 @@ void wifiSetup() {
     WiFi.mode(WIFI_STA);
     WiFi.setHostname(settings.wifi.hostname);
     WiFi.begin(settings.wifi.ssid, settings.wifi.password);
-    if (WL_CONNECTED != WiFi.waitForConnectResult(WIFI_CONNECTION_TIMEOUT_MS)) {
+    // WiFi.begin((const char*)settings.wifi.ssid, (const char*)settings.wifi.password);
+    // Generate feedback in terminal every second
+    for(uint32_t i = 0; i < WIFI_CONNECTION_TIMEOUT_MS / 1000; i++){
+        // if connected, break out of wait loop
+        if(WL_CONNECTED == WiFi.status())
+            break;
+
+        // To avoid spamming the RamLogger buffer (and because this is
+        // just an idle message), this is printed directly to serial
+        Serial.print('.');
+        delay(1000);
+    }
+    Serial.print("\n");
+
+    if(WL_CONNECTED != WiFi.status()){
         // WiFi setup failed
-        ramLogger.logLnf("Failed to connect to %s network. Starting SoftAP instead",
-                         settings.wifi.ssid);
-        WiFi.softAP(WIFI_AP_NAME);
+        ramLogger.logLnf("Failed to connect to %s network. Status=%u Starting SoftAP instead",
+                         settings.wifi.ssid, WiFi.status());
+        WiFi.mode(WIFI_AP);
+        if(!WiFi.softAP(WIFI_AP_NAME)){
+            ramLogger.logLn("Failed to setup softAP");
+        }
     } else {
         // successfull connection
-        ramLogger.logLnf("Successful connection. IP Address: %s", WiFi.localIP().toString().c_str());
+        ramLogger.logLnf("Successful connection. IP Address: %s, "
+            "DNS Server: %s",
+            WiFi.localIP().toString().c_str(),
+            WiFi.dnsIP().toString().c_str());
         WiFi.setAutoReconnect(true);
     }
 }
@@ -257,7 +277,7 @@ void setup() {
     timer0_Cfg = timerBegin(0, TIMER0_PRESCALER, true);
     timerAttachInterrupt(timer0_Cfg, timer0_ISR, true);
     timerAlarmWrite(timer0_Cfg, TIMER0_TICKS, false);
-    ramLogger.logLn("Started auto-reboot timer");
+    ramLogger.logLnf("Started auto-reboot timer. Interval: %us", AUTO_REBOOT_INTERVAL_S);
     timerAlarmEnable(timer0_Cfg);
 }
 
