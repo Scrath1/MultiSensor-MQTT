@@ -74,7 +74,8 @@ class DesktopFilesystem : public Filesystem {
      *
      * @param data [OUT] Array for storing read data
      * @param n [IN] Maximum amount of data to read in bytes / Size of data
-     * @param end [IN] Value upon which to stop reading, even if less than n bytes have been read. This value is NOT included in the output data.
+     * @param end [IN] Value upon which to stop reading, even if less than n bytes have been read. This value is NOT
+     * included in the output data.
      * @return RC_t RC_SUCCESS on success,
      *          RC_ERROR_OPEN if no file is open,
      *          RC_ERROR_READ_FAILS if the read operation has failed without reaching end-of-file

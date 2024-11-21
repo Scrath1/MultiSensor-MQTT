@@ -4,10 +4,10 @@
 
 // For creating fixed width integer definitions
 #if defined(ARDUINO)
-#include <Arduino.h>
+    #include <Arduino.h>
 #else
-#include <math.h>
-#include <stdint.h>
+    #include <math.h>
+    #include <stdint.h>
 #endif
 
 // Priority with which the main loop runs in respect to other tasks.
@@ -18,9 +18,7 @@
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
 
 // runs code inside following brackets exactly one time, even when called within a loop
-#define RUN_ONCE                            \
-    for (static bool _run_already_ = false; \
-         _run_already_ ? false : _run_already_ = true;)
+#define RUN_ONCE for(static bool _run_already_ = false; _run_already_ ? false : _run_already_ = true;)
 
 /**
  * @brief Various return codes to indicate different error conditions

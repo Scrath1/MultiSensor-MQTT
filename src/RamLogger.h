@@ -5,20 +5,21 @@
 #ifndef RAMLOGGER_H
 #define RAMLOGGER_H
 
-#include <cstdint>
 #include <cstdarg>
+#include <cstdint>
 #include <functional>
+
 #include "global.h"
 
-template<uint32_t maxNumberOfMessages, uint32_t maxMessageLength, uint32_t maxTimestampStrLength>
-class RamLogger{
-public:
+template <uint32_t maxNumberOfMessages, uint32_t maxMessageLength, uint32_t maxTimestampStrLength>
+class RamLogger {
+   public:
     /**
      * @brief Item stored in RamLogger buffer
      */
-    struct BufferEntry_t{
+    struct BufferEntry_t {
         const uint32_t msgLen = maxMessageLength; /**<@brief Denotes maximum size of msg string */
-        char msg[maxMessageLength] = ""; /**<@brief Log message */
+        char msg[maxMessageLength] = "";          /**<@brief Log message */
         char time[maxTimestampStrLength] = "";
 
         BufferEntry_t& operator=(const BufferEntry_t& other) {
@@ -55,7 +56,7 @@ public:
     /**
      * @brief Returns the number of elements currently stored in the buffer
      * @return
-    */
+     */
     uint32_t available() const;
 
     /**
@@ -74,7 +75,7 @@ public:
      * @return RC_t RC_SUCCESS on success, RC_ERROR if the formatting failed
      * In both cases the created string will be logged, even if it is malformed
      */
-    RC_t logf(const char * format, ...);
+    RC_t logf(const char* format, ...);
 
     /**
      * @brief Similar to log function but allows formatting like in printf
@@ -84,7 +85,7 @@ public:
      * @return RC_t RC_SUCCESS on success, RC_ERROR if the formatting failed
      * In both cases the created string will be logged, even if it is malformed
      */
-    RC_t logf(const char * format, va_list args);
+    RC_t logf(const char* format, va_list args);
 
     /**
      * @brief Wrapper around log which prints a line ending after the given string
@@ -100,7 +101,7 @@ public:
      * @param ... [IN] Additional parameters as required by the format string
      * @return RC_t Same as in logf
      */
-    RC_t logLnf(const char * format, ...);
+    RC_t logLnf(const char* format, ...);
 
     /**
      * @brief Returns the string at the given index
@@ -149,13 +150,13 @@ public:
      * @brief Returns how many strings can be stored at most before subsequent
      * log calls remove the oldest entries
      * @return
-    */
+     */
     uint32_t getMaxNumEntries() const;
 
     /**
      * @brief Returns how many messages have passed through this buffer
      * @return
-    */
+     */
     uint32_t getMsgCounter() const;
 
     /**
@@ -171,7 +172,7 @@ public:
 
     /**
      * @brief Clears the entire buffer
-    */
+     */
     void clear();
 
     /**
@@ -193,18 +194,16 @@ public:
      * @param func [IN] Function for printing to terminal/serial.
      * Has to return void and accept a const char[] as parameter.
      */
-    inline void setPrintFunction(std::function<void(const char[])> func){
+    inline void setPrintFunction(std::function<void(const char[])> func) {
         if(func != nullptr) printFunction = func;
     }
 
     /**
      * @brief Resets the overwritten print function back to the default
      */
-    inline void resetPrintFunction(){
-        printFunction = defaultPrintFunction;
-    }
+    inline void resetPrintFunction() { printFunction = defaultPrintFunction; }
 
-private:
+   private:
     /**
      * @brief Default function used for printing by RamLogger.
      * Can be changed using setPrintFunction(...) if printf
@@ -212,9 +211,7 @@ private:
      *
      * @param str [IN] string to print
      */
-    static void defaultPrintFunction(const char str[]){
-        printf(str);
-    }
+    static void defaultPrintFunction(const char str[]) { printf(str); }
 
     /**
      * @brief Converts an index to its actual buffer position.
@@ -262,4 +259,4 @@ private:
 
 #include "RamLogger.tpp"
 
-#endif //RAMLOGGER_H
+#endif  // RAMLOGGER_H

@@ -58,7 +58,7 @@ class Sensor {
      * @return uint32_t
      */
     inline uint32_t getNumPipelineStages() const {
-        if (m_transformer != nullptr)
+        if(m_transformer != nullptr)
             return m_transformer->countRemainingPipelineStages() + 1;
         else
             return 0;

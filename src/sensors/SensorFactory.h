@@ -10,8 +10,8 @@
 // Add new sensor implementations here
 #include "ADCSensor.h"
 #include "BooleanSensor.h"
-#include "RandomSensor.h"
 #include "DHT22.h"
+#include "RandomSensor.h"
 
 class SensorFactory {
    private:
@@ -28,13 +28,13 @@ class SensorFactory {
 
         // Parse the float parameter values
         RC_t err = readKeyValueFloat(configStr, "inMin", inMin, true);
-        if (RC_SUCCESS != err) return nullptr;
+        if(RC_SUCCESS != err) return nullptr;
         err = readKeyValueFloat(configStr, "inMax", inMax, true);
-        if (RC_SUCCESS != err) return nullptr;
+        if(RC_SUCCESS != err) return nullptr;
         err = readKeyValueFloat(configStr, "outMin", outMin, true);
-        if (RC_SUCCESS != err) return nullptr;
+        if(RC_SUCCESS != err) return nullptr;
         err = readKeyValueFloat(configStr, "outMax", outMax, true);
-        if (RC_SUCCESS != err) return nullptr;
+        if(RC_SUCCESS != err) return nullptr;
 
         return std::make_shared<Remapper>(inMin, inMax, outMin, outMax);
     }
@@ -50,7 +50,7 @@ class SensorFactory {
     static std::shared_ptr<Transformer> createSimpleMovingAverageFromStr(char configStr[]) {
         float_t n{0};
         RC_t err = readKeyValueFloat(configStr, "n", n, true);
-        if (RC_SUCCESS != err) return nullptr;
+        if(RC_SUCCESS != err) return nullptr;
 
         return std::make_shared<SimpleMovingAverageFilter>(static_cast<uint32_t>(n));
     }
@@ -58,7 +58,7 @@ class SensorFactory {
     static std::shared_ptr<Transformer> createDigitalThresholdFromStr(char configStr[]) {
         float_t thresh = 0;
         RC_t err = readKeyValueFloat(configStr, "thresh", thresh, true);
-        if (RC_SUCCESS != err) return nullptr;
+        if(RC_SUCCESS != err) return nullptr;
 
         return std::make_shared<DigitalThreshold>(thresh);
     }
@@ -66,7 +66,7 @@ class SensorFactory {
     static std::shared_ptr<Transformer> createOffsetFromStr(char configStr[]) {
         float_t offset = 0;
         RC_t err = readKeyValueFloat(configStr, "offset", offset, true);
-        if (RC_SUCCESS != err) return nullptr;
+        if(RC_SUCCESS != err) return nullptr;
 
         return std::make_shared<Offset>(offset);
     }
@@ -93,14 +93,14 @@ class SensorFactory {
     static std::shared_ptr<Transformer> parseTransformerChainFromConfigStr(char configStr[]) {
         std::shared_ptr<Transformer> prevTransformer;
         // Loop until no new transformer is found in string
-        while (true) {
+        while(true) {
             // Remove possible leading whitespaces
             trimLeadingWhitespace(configStr);
             char transformerTypeStr[128];
             uint32_t typenameLen = strcspn(configStr, TRANSFORMER_CFG_OPEN_CHAR);
             // If typenameLen is the same as the string length, no transformer name could
             // be found and the parsing is finished
-            if (typenameLen == strlen(configStr)) break;
+            if(typenameLen == strlen(configStr)) break;
 
             // Copy the transformer type string to a separate string and remove it from configStr
             strncpy(transformerTypeStr, configStr, typenameLen);
@@ -115,10 +115,9 @@ class SensorFactory {
             memmove(configStr, configStr + transformerCfgLen + 1, strlen(configStr + transformerCfgLen) + 1);
 
             // Delegate actual transformer parameter parsing to individual specialized functions
-            std::shared_ptr<Transformer> transformer = transformerFromConfigStr(transformerTypeStr,
-                                                                                transformerCfgStr);
+            std::shared_ptr<Transformer> transformer = transformerFromConfigStr(transformerTypeStr, transformerCfgStr);
             // If the transformer was not created successfully, return a nullptr to indicate an error
-            if (transformer == nullptr) return nullptr;
+            if(transformer == nullptr) return nullptr;
             // Chain the created transformers together
             transformer->setNextTransformer(prevTransformer);
             prevTransformer = transformer;
@@ -134,14 +133,14 @@ class SensorFactory {
     static Sensor* createRandomSensorFromStr(char configStr[]) {
         char name[SENSOR_NAME_MAX_LENGTH] = "";
         RC_t err = readKeyValue(configStr, "name", name, SENSOR_NAME_MAX_LENGTH, true);
-        if (err != RC_SUCCESS) return nullptr;
+        if(err != RC_SUCCESS) return nullptr;
 
         float_t lowerBound{0}, upperBound{0};
         err = readKeyValueFloat(configStr, "lowerBound", lowerBound, true);
-        if (RC_SUCCESS != err) return nullptr;
+        if(RC_SUCCESS != err) return nullptr;
 
         err = readKeyValueFloat(configStr, "upperBound", upperBound, true);
-        if (RC_SUCCESS != err) return nullptr;
+        if(RC_SUCCESS != err) return nullptr;
 
         // After parsing parameters, now parse the transformers
         std::shared_ptr<Transformer> transformer = parseTransformerChainFromConfigStr(configStr);
@@ -156,11 +155,11 @@ class SensorFactory {
     static Sensor* createADCSensorFromStr(char configStr[]) {
         char name[SENSOR_NAME_MAX_LENGTH] = "";
         RC_t err = readKeyValue(configStr, "name", name, SENSOR_NAME_MAX_LENGTH, true);
-        if (err != RC_SUCCESS) return nullptr;
+        if(err != RC_SUCCESS) return nullptr;
 
         int32_t pin = 0;
         err = readKeyValueInt(configStr, "pin", pin, true);
-        if (RC_SUCCESS != err) return nullptr;
+        if(RC_SUCCESS != err) return nullptr;
 
         std::shared_ptr<Transformer> transformer = parseTransformerChainFromConfigStr(configStr);
         return createADCSensor(name, pin, transformer);
@@ -169,18 +168,18 @@ class SensorFactory {
     static Sensor* createBooleanSensorFromStr(char configStr[]) {
         char name[SENSOR_NAME_MAX_LENGTH] = "";
         RC_t err = readKeyValue(configStr, "name", name, SENSOR_NAME_MAX_LENGTH, true);
-        if (err != RC_SUCCESS) return nullptr;
+        if(err != RC_SUCCESS) return nullptr;
 
         int32_t pin = 0;
         err = readKeyValueInt(configStr, "pin", pin, true);
-        if (RC_SUCCESS != err) return nullptr;
+        if(RC_SUCCESS != err) return nullptr;
 
         char pinMode[32] = "";
         err = readKeyValue(configStr, "pinMode", pinMode, sizeof(pinMode), true);
         BooleanSensor::PinMode mode = BooleanSensor::Input;
-        if (strcmp(pinMode, "InputPullUp") == 0) {
+        if(strcmp(pinMode, "InputPullUp") == 0) {
             mode = BooleanSensor::InputPullUp;
-        } else if (strcmp(pinMode, "InputPullDown") == 0) {
+        } else if(strcmp(pinMode, "InputPullDown") == 0) {
             mode = BooleanSensor::InputPullDown;
         }
 
@@ -191,21 +190,24 @@ class SensorFactory {
     static Sensor* createDHT22FromStr(char configStr[]) {
         char name[SENSOR_NAME_MAX_LENGTH] = "";
         RC_t err = readKeyValue(configStr, "name", name, SENSOR_NAME_MAX_LENGTH, true);
-        if (err != RC_SUCCESS) return nullptr;
+        if(err != RC_SUCCESS) return nullptr;
 
         int32_t pin = 0;
         err = readKeyValueInt(configStr, "pin", pin, true);
-        if (RC_SUCCESS != err) return nullptr;
+        if(RC_SUCCESS != err) return nullptr;
 
         char type[32];
         err = readKeyValue(configStr, "type", type, 32, true);
-        if (RC_SUCCESS != err) return nullptr;
+        if(RC_SUCCESS != err) return nullptr;
         // convert type string to lowercase
         for(char& c : type) c = tolower(c);
         DHT22::Type t;
-        if(strncmp("temperature", type, 32) == 0) t = DHT22::TEMPERATURE;
-        else if (strncmp("humidity", type, 32) == 0) t = DHT22::HUMIDITY;
-        else return nullptr;
+        if(strncmp("temperature", type, 32) == 0)
+            t = DHT22::TEMPERATURE;
+        else if(strncmp("humidity", type, 32) == 0)
+            t = DHT22::HUMIDITY;
+        else
+            return nullptr;
 
         std::shared_ptr<Transformer> transformer = parseTransformerChainFromConfigStr(configStr);
         return createDHT22(name, pin, t, transformer);
@@ -221,13 +223,11 @@ class SensorFactory {
      *  processing raw sensor reading
      * @return Sensor*
      */
-    static Sensor* createADCSensor(char name[], uint32_t pin,
-                                   std::shared_ptr<Transformer> transformer = nullptr) {
+    static Sensor* createADCSensor(char name[], uint32_t pin, std::shared_ptr<Transformer> transformer = nullptr) {
         return new ADCSensor(name, pin, transformer);
     }
 
-    static Sensor* createBooleanSensor(char name[], uint32_t pin,
-                                       BooleanSensor::PinMode pinMode,
+    static Sensor* createBooleanSensor(char name[], uint32_t pin, BooleanSensor::PinMode pinMode,
                                        std::shared_ptr<Transformer> transformer = nullptr) {
         return new BooleanSensor(name, pin, pinMode, transformer);
     }
@@ -244,16 +244,16 @@ class SensorFactory {
      *  processing raw sensor reading
      * @return Sensor*
      */
-    static Sensor* createRandomSensor(char name[], float_t lowerBound,
-                                      float_t upperBound, std::shared_ptr<Transformer> transformer = nullptr) {
+    static Sensor* createRandomSensor(char name[], float_t lowerBound, float_t upperBound,
+                                      std::shared_ptr<Transformer> transformer = nullptr) {
         return new RandomSensor(name, lowerBound, upperBound, transformer);
     }
 
     static Sensor* createDHT22(char name[], uint32_t pin, DHT22::Type type,
-        std::shared_ptr<Transformer> transformer = nullptr){
-            typedef class DHT22 _DHT22;
-            return new _DHT22{name, pin, type, transformer};
-        }
+                               std::shared_ptr<Transformer> transformer = nullptr) {
+        typedef class DHT22 _DHT22;
+        return new _DHT22{name, pin, type, transformer};
+    }
 
     /**
      * @brief Calls the appropriate Transformer creation function based on the given transformerType string.
@@ -266,13 +266,13 @@ class SensorFactory {
      *  to extract the required parameters
      */
     static std::shared_ptr<Transformer> transformerFromConfigStr(const char transformerType[], char configStr[]) {
-        if (strcmp(transformerType, "Remapper") == 0) {
+        if(strcmp(transformerType, "Remapper") == 0) {
             return createRemapperFromStr(configStr);
-        } else if (strcmp(transformerType, "SimpleMovingAverageFilter") == 0) {
+        } else if(strcmp(transformerType, "SimpleMovingAverageFilter") == 0) {
             return createSimpleMovingAverageFromStr(configStr);
-        } else if (strcmp(transformerType, "DigitalThreshold") == 0) {
+        } else if(strcmp(transformerType, "DigitalThreshold") == 0) {
             return createDigitalThresholdFromStr(configStr);
-        } else if (strcmp(transformerType, "Offset") == 0) {
+        } else if(strcmp(transformerType, "Offset") == 0) {
             return createOffsetFromStr(configStr);
         } else
             return nullptr;
@@ -286,13 +286,13 @@ class SensorFactory {
      * @return Sensor*
      */
     static Sensor* sensorFromConfigString(char sensorType[], char configStr[]) {
-        if (strcmp(sensorType, "RandomSensor") == 0) {
+        if(strcmp(sensorType, "RandomSensor") == 0) {
             return createRandomSensorFromStr(configStr);
-        } else if (strcmp(sensorType, "ADCSensor") == 0) {
+        } else if(strcmp(sensorType, "ADCSensor") == 0) {
             return createADCSensorFromStr(configStr);
-        } else if (strcmp(sensorType, "BooleanSensor") == 0) {
+        } else if(strcmp(sensorType, "BooleanSensor") == 0) {
             return createBooleanSensorFromStr(configStr);
-        } else if (strcmp(sensorType, "DHT22") == 0) {
+        } else if(strcmp(sensorType, "DHT22") == 0) {
             return createDHT22FromStr(configStr);
         } else
             return nullptr;

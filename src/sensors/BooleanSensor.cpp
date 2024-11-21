@@ -5,6 +5,4 @@ BooleanSensor::BooleanSensor(char name[], uint32_t pin, PinMode pinmode, std::sh
     pinMode(m_gpioPin, pinmode);
 }
 
-float_t BooleanSensor::readSensorRaw() {
-    return digitalRead(m_gpioPin);
-}
+float_t BooleanSensor::readSensorRaw() { return digitalRead(m_gpioPin); }

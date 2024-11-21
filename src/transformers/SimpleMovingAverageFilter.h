@@ -13,8 +13,7 @@ class SimpleMovingAverageFilter : public Transformer {
      * @param next [IN] shared pointer to next step in transformation pipeline.
      *  Defaults to a nullptr.
      */
-    SimpleMovingAverageFilter(uint32_t n,
-                              std::shared_ptr<Transformer> next = std::shared_ptr<Transformer>());
+    SimpleMovingAverageFilter(uint32_t n, std::shared_ptr<Transformer> next = std::shared_ptr<Transformer>());
     ~SimpleMovingAverageFilter() override;
 
    protected:

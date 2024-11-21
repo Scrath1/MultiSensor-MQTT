@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 #ifdef ARDUINO
-#include "filesystem/LittleFilesystem.h"
+    #include "filesystem/LittleFilesystem.h"
 #else
-#include "filesystem/DesktopFilesystem.h"
+    #include "filesystem/DesktopFilesystem.h"
 #endif  // ARDUINO
 
 class FilesystemTest : public testing::Test {
@@ -14,8 +14,7 @@ class FilesystemTest : public testing::Test {
     DesktopFilesystem fs;
     const char testFilename[15] = "./testfile.txt";
 #endif  // ARDUINO
-    void SetUp() override {
-    }
+    void SetUp() override {}
 
     void TearDown() override {
         // Doesn't work for some reason
@@ -24,8 +23,7 @@ class FilesystemTest : public testing::Test {
 };
 
 TEST_F(FilesystemTest, OpenCloseTest) {
-    if (fs.fileExists(testFilename))
-        fs.deleteFile(testFilename);
+    if(fs.fileExists(testFilename)) fs.deleteFile(testFilename);
     // Should fail since mode is read-only and cannot create file
     EXPECT_EQ(fs.openFile(testFilename), RC_ERROR_OPEN);
 

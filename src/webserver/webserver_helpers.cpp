@@ -7,11 +7,11 @@
 void listAllParams(const AsyncWebServerRequest* request) {
     // List all parameters
     int params = request->params();
-    for (int i = 0; i < params; i++) {
+    for(int i = 0; i < params; i++) {
         AsyncWebParameter* p = request->getParam(i);
-        if (p->isFile()) {  // p->isPost() is also true
+        if(p->isFile()) {  // p->isPost() is also true
             Serial.printf("FILE[%s]: %s, size: %u\n", p->name().c_str(), p->value().c_str(), p->size());
-        } else if (p->isPost()) {
+        } else if(p->isPost()) {
             Serial.printf("POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
         } else {
             Serial.printf("GET[%s]: %s\n", p->name().c_str(), p->value().c_str());
@@ -21,8 +21,8 @@ void listAllParams(const AsyncWebServerRequest* request) {
 
 bool isNumeric(const AsyncWebParameter* const p) {
     String str = p->value();
-    for (byte i = 0; i < str.length(); i++) {
-        if (!isDigit(str[i]) && !(i == 0 && str[i] == '-')) {
+    for(byte i = 0; i < str.length(); i++) {
+        if(!isDigit(str[i]) && !(i == 0 && str[i] == '-')) {
             // string may not contain non-numeric characters,
             // unless it is the first character and a minus sign
             return false;
@@ -32,7 +32,7 @@ bool isNumeric(const AsyncWebParameter* const p) {
 }
 
 bool paramToInt(const AsyncWebParameter* const p, int32_t& output) {
-    if (isNumeric(p)) {
+    if(isNumeric(p)) {
         String str = p->value();
         output = str.toInt();
         return true;
@@ -42,10 +42,10 @@ bool paramToInt(const AsyncWebParameter* const p, int32_t& output) {
 
 bool getLogMessagesFromTo(AsyncResponseStream* response, int32_t from, int32_t to) {
     // Either two negative or two positive indices are allowed, but not mixed
-    if ((from < 0) != (to < 0)) return false;
+    if((from < 0) != (to < 0)) return false;
 
     // make sure that from has the smaller absolute value
-    if (std::abs(from) > std::abs(to)) {
+    if(std::abs(from) > std::abs(to)) {
         int32_t tmp = from;
         from = to;
         to = tmp;
@@ -53,23 +53,24 @@ bool getLogMessagesFromTo(AsyncResponseStream* response, int32_t from, int32_t t
 
     // Range check. If it exceeds the range, limit the to index to the maximum
     const uint32_t av = ramLogger.available();
-    if (from < 0) {
+    if(from < 0) {
         // if negative indexing is used, to may at most be the opposite of
         // the number of available messages
-        if (to < static_cast<int32_t>(av) * -1) to = static_cast<int32_t>(av) * -1;
+        if(to < static_cast<int32_t>(av) * -1) to = static_cast<int32_t>(av) * -1;
     } else {
-        if (to >= av) to = av;
+        if(to >= av) to = av;
     }
 
     DynamicJsonDocument doc(DYNAMIC_JSON_DOCUMENT_SIZE);
     JsonArray array = doc.to<JsonArray>();
     // Get individual log messages
-    for (uint32_t i = std::abs(from); i <= std::abs(to); i++) {
-        RamLogger<RAMLOGGER_MAX_MESSAGE_COUNT, RAMLOGGER_MAX_STRING_LENGTH, RAMLOGGER_MAX_TIMESTAMP_STR_LEN>::BufferEntry_t bufEntry;
+    for(uint32_t i = std::abs(from); i <= std::abs(to); i++) {
+        RamLogger<RAMLOGGER_MAX_MESSAGE_COUNT, RAMLOGGER_MAX_STRING_LENGTH,
+                  RAMLOGGER_MAX_TIMESTAMP_STR_LEN>::BufferEntry_t bufEntry;
         RC_t err;
-        if (from < 0) {
+        if(from < 0) {
             // negative indexing. to+i preserves order from oldest to newest
-            bufEntry = ramLogger.get(static_cast<int32_t>(to -1 + i), err);
+            bufEntry = ramLogger.get(static_cast<int32_t>(to - 1 + i), err);
             // bufEntry = ramLogger.get(static_cast<int32_t>(i) * -1, err);
         } else {
             // positive indexing
@@ -87,12 +88,12 @@ bool getLogMessagesFromTo(AsyncResponseStream* response, int32_t from, int32_t t
 }
 
 bool getFromToIndices(const AsyncWebServerRequest* const request, int32_t& fromIdx, int32_t& toIdx) {
-    if (request->hasParam("from") && request->hasParam("to")) {
+    if(request->hasParam("from") && request->hasParam("to")) {
         AsyncWebParameter* from = request->getParam("from");
         AsyncWebParameter* to = request->getParam("to");
 
-        if (!paramToInt(from, fromIdx) && fromIdx >= 0) return false;
-        if (!paramToInt(to, toIdx) && toIdx >= 0) return false;
+        if(!paramToInt(from, fromIdx) && fromIdx >= 0) return false;
+        if(!paramToInt(to, toIdx) && toIdx >= 0) return false;
 
         return true;
     } else
@@ -106,7 +107,7 @@ void getSystemInfo(AsyncResponseStream* response) {
     // WiFi
     JsonObject wifiObj = root.createNestedObject("WiFi");
     char modeNodeName[] = "Mode";
-    switch (WiFi.getMode()) {
+    switch(WiFi.getMode()) {
         default:
             wifiObj[modeNodeName] = "NULL";
             break;
@@ -129,7 +130,7 @@ void getSystemInfo(AsyncResponseStream* response) {
 }
 
 void getCurrentSensorData(JsonObject& obj) {
-    for (Sensor* s : sensors) {
+    for(Sensor* s : sensors) {
         obj[s->getName()] = s->readSensor();
     }
 }

@@ -16,8 +16,8 @@
 
 #define TIMESTAMP_STR_LEN 32
 
-#if (NUM_START_ENTRIES >= MAX_ENTRIES)
-#error Number of start entries in the buffer should be less than maximum
+#if(NUM_START_ENTRIES >= MAX_ENTRIES)
+    #error Number of start entries in the buffer should be less than maximum
 #endif
 
 class RamLoggerTest : public testing::Test {
@@ -29,7 +29,7 @@ class RamLoggerTest : public testing::Test {
     // Actual RamLogger object
     RamLogger<MAX_ENTRIES, MAX_STRING_LENGTH, TIMESTAMP_STR_LEN> testLogger;
     // Strings used for testing the RamLogger
-    const char *testStrings[NUM_TEST_STRINGS];
+    const char* testStrings[NUM_TEST_STRINGS];
 
     void SetUp() override {
         // Prepare test data
@@ -42,7 +42,7 @@ class RamLoggerTest : public testing::Test {
         testStrings[6] = "adipiscing";
 
         // Enter some test data but don't fill RamLogger up completely
-        for (uint32_t i = 0; i < NUM_START_ENTRIES; i++) {
+        for(uint32_t i = 0; i < NUM_START_ENTRIES; i++) {
             RC_t err = testLogger.logLn(testStrings[i]);
             ASSERT_EQ(err, RC_SUCCESS);
         }
@@ -163,7 +163,7 @@ TEST_F(RamLoggerTest, GetWithMsgNumberTest) {
 TEST_F(RamLoggerTest, RingbufferingTest) {
     // fill up the rest of the RamLogger with teststrings
     ASSERT_EQ(MAX_STRING_LENGTH, testLogger.getMaxMsgLen());
-    for (uint32_t i = NUM_START_ENTRIES; i < MAX_ENTRIES; i++) {
+    for(uint32_t i = NUM_START_ENTRIES; i < MAX_ENTRIES; i++) {
         RC_t err = testLogger.logLn(testStrings[i]);
         ASSERT_EQ(err, RC_SUCCESS);
     }

@@ -2,9 +2,9 @@
 
 #include "cfg.h"
 #ifdef ARDUINO
-#include "filesystem/LittleFilesystem.h"
+    #include "filesystem/LittleFilesystem.h"
 #else
-#include "filesystem/DesktopFilesystem.h"
+    #include "filesystem/DesktopFilesystem.h"
 #endif  // ARDUINO
 
 // global RamLogger object

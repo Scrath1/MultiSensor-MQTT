@@ -16,7 +16,8 @@ class RandomSensor : public Sensor {
      * @param upperBound [IN] Highest possible number to generate
      * @param transformer [IN] Pointer to optional data transformation pipeline
      */
-    RandomSensor(char name[], float_t lowerBound, float_t upperBound, std::shared_ptr<Transformer> transformer = nullptr);
+    RandomSensor(char name[], float_t lowerBound, float_t upperBound,
+                 std::shared_ptr<Transformer> transformer = nullptr);
 
    protected:
     float_t readSensorRaw() override;

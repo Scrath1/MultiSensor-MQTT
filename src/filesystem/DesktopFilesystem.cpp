@@ -4,13 +4,11 @@
 #include <fstream>
 #include <iostream>
 
-DesktopFilesystem::DesktopFilesystem() {
-    successfullyMounted = true;
-}
+DesktopFilesystem::DesktopFilesystem() { successfullyMounted = true; }
 
 RC_t DesktopFilesystem::openFile(const char filename[], OpenMode_t openMode) {
     std::ios::openmode mode;
-    switch (openMode) {
+    switch(openMode) {
         default:
         case READ_ONLY:
             mode = std::ios::in;
@@ -23,67 +21,63 @@ RC_t DesktopFilesystem::openFile(const char filename[], OpenMode_t openMode) {
             break;
     }
     // if a file was previously opened, close it first
-    if (hasOpenFile()) return RC_ERROR_BUSY;
+    if(hasOpenFile()) return RC_ERROR_BUSY;
 
     fileMode = openMode;
     file.open(filename, mode);
-    if (hasOpenFile())
+    if(hasOpenFile())
         return RC_SUCCESS;
     else
         return RC_ERROR_OPEN;
 }
 
-bool DesktopFilesystem::hasOpenFile() {
-    return file.is_open();
-}
+bool DesktopFilesystem::hasOpenFile() { return file.is_open(); }
 
 RC_t DesktopFilesystem::closeFile() {
-    if (hasOpenFile()) file.close();
+    if(hasOpenFile()) file.close();
     return RC_SUCCESS;
 }
 
 RC_t DesktopFilesystem::write(const uint8_t* data, uint32_t n) {
-    if (!hasOpenFile()) return RC_ERROR_OPEN;
+    if(!hasOpenFile()) return RC_ERROR_OPEN;
     file.write((const char*)data, n);
     return RC_SUCCESS;
 }
 
 RC_t DesktopFilesystem::flush() {
-    if (!hasOpenFile()) return RC_ERROR_OPEN;
+    if(!hasOpenFile()) return RC_ERROR_OPEN;
     file.flush();
-    if (file.fail()) return RC_ERROR;
+    if(file.fail()) return RC_ERROR;
     return RC_SUCCESS;
 }
 
 RC_t DesktopFilesystem::read(uint8_t* data, uint32_t n) {
-    if (!hasOpenFile()) return RC_ERROR_OPEN;
+    if(!hasOpenFile()) return RC_ERROR_OPEN;
     file.read((char*)data, n);
-    if (file.fail() && !file.eof()) return RC_ERROR_READ_FAILS;
+    if(file.fail() && !file.eof()) return RC_ERROR_READ_FAILS;
     return RC_SUCCESS;
 }
 
 RC_t DesktopFilesystem::readUntil(uint8_t* data, uint32_t n, uint8_t end) {
-    if (!hasOpenFile()) return RC_ERROR_OPEN;
+    if(!hasOpenFile()) return RC_ERROR_OPEN;
     file.getline((char*)data, n, (char)end);
-    if (file.fail() && !file.eof()) return RC_ERROR_READ_FAILS;
+    if(file.fail() && !file.eof()) return RC_ERROR_READ_FAILS;
     return RC_SUCCESS;
 }
 
-bool DesktopFilesystem::eof() {
-    return !hasOpenFile() || file.eof();
-}
+bool DesktopFilesystem::eof() { return !hasOpenFile() || file.eof(); }
 
 bool DesktopFilesystem::fileExists(const char filename[]) {
     std::ifstream f;
     f.open(filename);
-    if (f.fail()) return false;
+    if(f.fail()) return false;
 
     file.close();
     return true;
 }
 
 RC_t DesktopFilesystem::deleteFile(const char filename[]) {
-    if (0 == remove(filename))
+    if(0 == remove(filename))
         return RC_SUCCESS;
     else
         return RC_ERROR;

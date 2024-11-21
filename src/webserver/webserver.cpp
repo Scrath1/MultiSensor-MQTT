@@ -4,18 +4,16 @@
 #include <ESPAsyncWebServer.h>
 #include <LittleFS.h>
 #include <WiFi.h>
-#include "esp_task_wdt.h"
 
 #include "cfg.h"
+#include "esp_task_wdt.h"
 #include "filesystem/Filesystem.h"
 #include "global_objects.h"
 #include "webserver_helpers.h"
 
 AsyncWebServer server(80);
 
-void notFound(AsyncWebServerRequest* request) {
-    request->send(404, "text/plain", "Not found");
-}
+void notFound(AsyncWebServerRequest* request) { request->send(404, "text/plain", "Not found"); }
 
 void sensorEndpointSetup() {
     /**
@@ -45,22 +43,22 @@ void logEndpointSetup() {
 #if ENABLE_WEBSERVER_REQUEST_LOGGING
         Serial.println("Webserver: Log request received");
 #endif  // ENABLE_WEBSERVER_REQUEST_LOGGING
-        if (request->args() == 0) {
+        if(request->args() == 0) {
             // no params, just return last log message
             AsyncResponseStream* response = request->beginResponseStream("application/json");
             getLogMessagesFromTo(response, -1, -1);
             request->send(response);
-        } else if (request->hasParam("from") && request->hasParam("to")) {
+        } else if(request->hasParam("from") && request->hasParam("to")) {
             // range based data request
             int32_t fromIdx, toIdx;
-            if (!getFromToIndices(request, fromIdx, toIdx)) {
+            if(!getFromToIndices(request, fromIdx, toIdx)) {
                 // Couldn't get indices. Send an error code and return
                 request->send(400);
                 return;
             }
 
             AsyncResponseStream* response = request->beginResponseStream("application/json");
-            if (getLogMessagesFromTo(response, fromIdx, toIdx)) {
+            if(getLogMessagesFromTo(response, fromIdx, toIdx)) {
                 // Success. Send log messages
                 request->send(response);
             } else {
@@ -85,13 +83,13 @@ void systemEndpointSetup() {
 
         // Parameter handling
         uint32_t changedSettingCount = 0;
-        if (request->hasParam("ssid", true)) {
+        if(request->hasParam("ssid", true)) {
             AsyncWebParameter* p = request->getParam("ssid", true);
             strcpy(settings.wifi.ssid, p->value().c_str());
             ramLogger.logLnf("Updated SSID to %s", p->value().c_str());
             changedSettingCount++;
         }
-        if (request->hasParam("wifiPassword", true)) {
+        if(request->hasParam("wifiPassword", true)) {
             AsyncWebParameter* p = request->getParam("wifiPassword", true);
             strcpy(settings.wifi.password, p->value().c_str());
             // write to non-volatile storage
@@ -99,36 +97,36 @@ void systemEndpointSetup() {
             ramLogger.logLn("Updated WiFi password");
             changedSettingCount++;
         }
-        if (request->hasParam("hostname", true)) {
+        if(request->hasParam("hostname", true)) {
             AsyncWebParameter* p = request->getParam("hostname", true);
             strcpy(settings.wifi.hostname, p->value().c_str());
             ramLogger.logLnf("Updated hostname to %s", p->value().c_str());
             changedSettingCount++;
         }
-        if (request->hasParam("brokerAddress", true)) {
+        if(request->hasParam("brokerAddress", true)) {
             AsyncWebParameter* p = request->getParam("brokerAddress", true);
             strcpy(settings.mqtt.brokerAddress, p->value().c_str());
             ramLogger.logLnf("Updated broker address to %s", p->value().c_str());
             changedSettingCount++;
         }
-        if (request->hasParam("brokerPort", true)) {
+        if(request->hasParam("brokerPort", true)) {
             AsyncWebParameter* p = request->getParam("brokerPort", true);
 
             int32_t port = 0;
             // make sure that the port parameter is numeric
-            if (paramToInt(p, port)) {
+            if(paramToInt(p, port)) {
                 settings.mqtt.brokerPort = port;
                 ramLogger.logLnf("Updated broker port to %u", port);
                 changedSettingCount++;
             }
         }
-        if (request->hasParam("username", true)) {
+        if(request->hasParam("username", true)) {
             AsyncWebParameter* p = request->getParam("username", true);
             strcpy(settings.mqtt.username, p->value().c_str());
             ramLogger.logLnf("Updated username to %s", p->value().c_str());
             changedSettingCount++;
         }
-        if (request->hasParam("mqttPassword", true)) {
+        if(request->hasParam("mqttPassword", true)) {
             AsyncWebParameter* p = request->getParam("mqttPassword", true);
             strcpy(settings.mqtt.password, p->value().c_str());
             // write to non-volatile storage
@@ -136,21 +134,21 @@ void systemEndpointSetup() {
             ramLogger.logLn("Updated MQTT password");
             changedSettingCount++;
         }
-        if (request->hasParam("clientID", true)) {
+        if(request->hasParam("clientID", true)) {
             AsyncWebParameter* p = request->getParam("clientID", true);
             strcpy(settings.mqtt.clientID, p->value().c_str());
             ramLogger.logLnf("Updated clientID to %s", p->value().c_str());
             changedSettingCount++;
         }
-        if (request->hasParam("deviceTopic", true)) {
+        if(request->hasParam("deviceTopic", true)) {
             AsyncWebParameter* p = request->getParam("deviceTopic", true);
             strcpy(settings.mqtt.deviceTopic, p->value().c_str());
             ramLogger.logLnf("Updated deviceTopic to %s", p->value().c_str());
             changedSettingCount++;
         }
-        if (request->hasParam("sensorConfig", true)) {
+        if(request->hasParam("sensorConfig", true)) {
             AsyncWebParameter* p = request->getParam("sensorConfig", true);
-            if (RC_SUCCESS == filesystem->openFile(SENSOR_CFG_FILENAME, Filesystem::WRITE_TRUNCATE)) {
+            if(RC_SUCCESS == filesystem->openFile(SENSOR_CFG_FILENAME, Filesystem::WRITE_TRUNCATE)) {
                 const char* text = p->value().c_str();
                 // listAllParams(request);
                 const uint32_t textLen = strlen(text);
@@ -167,21 +165,20 @@ void systemEndpointSetup() {
         }
 
         // If any settings were changed, write them back and reboot
-        if (changedSettingCount > 0) {
+        if(changedSettingCount > 0) {
             RC_t err = writeToSettingsFile(CONFIG_FILENAME, settings);
-            if (RC_SUCCESS != err)
+            if(RC_SUCCESS != err)
                 ramLogger.logLnf("Failed to write settings file, Error Code=%i", err);
             else {
                 // Short delay to finish printing potential debug messages
-                ramLogger.logLnf("%u settings changed. Restarting system in 3 seconds", 
-                    changedSettingCount);
+                ramLogger.logLnf("%u settings changed. Restarting system in 3 seconds", changedSettingCount);
                 delay(3000);
                 ESP.restart();
             }
         }
 
         // Check this parameter last as it will stop code execution after it
-        if (request->hasParam("restart", true)) {
+        if(request->hasParam("restart", true)) {
             // Restart system
             request->send(200);
             ramLogger.logLn("Restarting system in 5 seconds");
@@ -190,10 +187,10 @@ void systemEndpointSetup() {
         }
 
         // Reply
-        if (request->args() == 0) {  // no arguments were received
+        if(request->args() == 0) {  // no arguments were received
             ramLogger.logLn("Received /api/system POST request without parameters");
             request->send(400, "text/plain", "POST request without parameters");
-        } else if (changedSettingCount == 0) {
+        } else if(changedSettingCount == 0) {
             // some arguments were received but no settings updated
             // due to wrong parameters
             ramLogger.logLn("Invalid POST request parameters");
@@ -205,12 +202,12 @@ void systemEndpointSetup() {
 
     // General information requests
     server.on("/api/system", HTTP_GET, [](AsyncWebServerRequest* request) {
-        if (request->args() == 0) {
+        if(request->args() == 0) {
             // No arguments, return general system information
             AsyncResponseStream* response = request->beginResponseStream("application/json");
             getSystemInfo(response);
             request->send(response);
-        } else if (request->hasParam("getConfig")) {
+        } else if(request->hasParam("getConfig")) {
             AsyncResponseStream* response = request->beginResponseStream("application/json");
             getConfig(response);
             request->send(response);
@@ -221,17 +218,17 @@ void systemEndpointSetup() {
 void fileEndpointSetup() {
     // General information requests
     server.on("/api/file", HTTP_GET, [](AsyncWebServerRequest* request) {
-        if (request->hasParam("filename")) {
+        if(request->hasParam("filename")) {
             AsyncWebParameter* fnameParam = request->getParam("filename");
 
-            if (filesystem->fileExists(fnameParam->value().c_str())) {
+            if(filesystem->fileExists(fnameParam->value().c_str())) {
                 request->send(LittleFS, fnameParam->value().c_str());
             } else {
                 request->send(404, "text/plain", "Not found");
             }
-        } else if (request->hasParam("sensorConfig")) {
+        } else if(request->hasParam("sensorConfig")) {
             // on data param, always return the persisted data file if it exists
-            if (filesystem->fileExists(SENSOR_CFG_FILENAME)) {
+            if(filesystem->fileExists(SENSOR_CFG_FILENAME)) {
                 request->send(LittleFS, SENSOR_CFG_FILENAME);
             } else {
                 ramLogger.logLn("Download request: Sensor config file does not exist");
@@ -262,13 +259,11 @@ void webserverSetup() {
         request->send(response);
     });
     // Required to serve the stylesheet together with the website
-    server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest* request) {
-        request->send(LittleFS, "/style.css", "text/css");
-    });
+    server.on("/style.css", HTTP_GET,
+              [](AsyncWebServerRequest* request) { request->send(LittleFS, "/style.css", "text/css"); });
     // and for the javascript file
-    server.on("/scripts.js", HTTP_GET, [](AsyncWebServerRequest* request) {
-        request->send(LittleFS, "/scripts.js", "application/javascript");
-    });
+    server.on("/scripts.js", HTTP_GET,
+              [](AsyncWebServerRequest* request) { request->send(LittleFS, "/scripts.js", "application/javascript"); });
     sensorEndpointSetup();
     logEndpointSetup();
     systemEndpointSetup();
