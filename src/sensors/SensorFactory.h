@@ -9,6 +9,7 @@
 
 // Add new sensor implementations here
 #include "ADCSensor.h"
+#include "BH1750_Sensor.h"
 #include "BooleanSensor.h"
 #include "DHT22.h"
 #include "RandomSensor.h"
@@ -165,6 +166,18 @@ class SensorFactory {
         return createADCSensor(name, pin, transformer);
     }
 
+    static Sensor* createBH1750_SensorFromStr(char configStr[]) {
+        char name[SENSOR_NAME_MAX_LENGTH] = "";
+        RC_t err = readKeyValue(configStr, "name", name, SENSOR_NAME_MAX_LENGTH, true);
+        if(err != RC_SUCCESS) return nullptr;
+
+        int32_t addr = 0;
+        err = readKeyValueInt(configStr, "addr", addr, true);
+        if(RC_SUCCESS != err) addr = BH1750_I2C_ADDRESS_LOW;
+        std::shared_ptr<Transformer> transformer = parseTransformerChainFromConfigStr(configStr);
+        return createBH1750_Sensor(name, addr, transformer);
+    }
+
     static Sensor* createBooleanSensorFromStr(char configStr[]) {
         char name[SENSOR_NAME_MAX_LENGTH] = "";
         RC_t err = readKeyValue(configStr, "name", name, SENSOR_NAME_MAX_LENGTH, true);
@@ -255,6 +268,10 @@ class SensorFactory {
         return new _DHT22{name, pin, type, transformer};
     }
 
+    static Sensor* createBH1750_Sensor(char name[], uint8_t addr, std::shared_ptr<Transformer> transformer = nullptr) {
+        return new BH1750_Sensor(name, addr, transformer);
+    }
+
     /**
      * @brief Calls the appropriate Transformer creation function based on the given transformerType string.
      * The string should match the class name of the wanted Transformer implementation.
@@ -294,6 +311,8 @@ class SensorFactory {
             return createBooleanSensorFromStr(configStr);
         } else if(strcmp(sensorType, "DHT22") == 0) {
             return createDHT22FromStr(configStr);
+        } else if(strcmp(sensorType, "BH1750_Sensor") == 0) {
+            return createBH1750_SensorFromStr(configStr);
         } else
             return nullptr;
     }
